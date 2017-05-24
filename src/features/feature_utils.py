@@ -85,21 +85,13 @@ def remap_labels(labels, data, original_labels):
     return(pd.DataFrame(data=data, columns=labels).loc[:,original_labels].values)
 
 
-
-#--------------#
-
-
 def log_results(predictions, df_train, df_test, name, timestamp, score):
-	
-
 	flatten = lambda l: [item for sublist in l for item in sublist]
 	labels = list(set(flatten([l.split(' ') for l in df_train['tags'].values])))
-	# sort alphabetically!
 	labels = np.array(sorted(labels))
 	print(labels)
 	preds = [' '.join(labels[pred_row == 1]) for pred_row in predictions]
 	results = pd.DataFrame()
 	results['image_name'] = df_test.image_name.values
 	results['tags'] = preds
-	results.to_csv('../logs/predictions/{}_{}_{}.csv').format(timestamp, modelname, score)
-
+	results.to_csv('../logs/predictions/{}_{}_{}.csv'.format(timestamp, name, score))
