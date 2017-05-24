@@ -57,7 +57,7 @@ def save_planet(logger, name, epochs, size, batch_size, treshold, class_weight, 
 		architecture = m.SimpleNet64_2(size, output_size=len(labels))
 	model = Model(inputs=architecture.input, outputs=architecture.output)
 	model.compile(loss='binary_crossentropy', optimizer='adam')
-	callbacks = [EarlyStopping(monitor='val_loss', patience=3, verbose=1),
+	callbacks = [EarlyStopping(monitor='val_loss', patience=6, verbose=1),
 				ModelCheckpoint('../models/{}_{}.h5'.format(logger.ts, name),
 				 monitor='val_loss', save_best_only=True, verbose=1)]
 
