@@ -18,6 +18,7 @@ from keras.layers import Conv2D, MaxPooling2D, AveragePooling2D, GlobalAveragePo
 from keras.layers.normalization import BatchNormalization
 from keras.callbacks import EarlyStopping, ModelCheckpoint
 from keras.preprocessing.image import ImageDataGenerator
+from keras.optimizers import Adam
 from keras.layers.advanced_activations import PReLU
 from sklearn.model_selection import train_test_split
 
@@ -33,7 +34,8 @@ import plots.plot_utils as pu
 import log_utils as lu
 
 
-def save_planet(logger, name, epochs, size, batch_size, treshold, class_weight, debug=False):
+def save_planet(logger, name, epochs, size, batch_size, learning_rate, 
+				treshold, class_weight, debug=False):
 	
 	# -------load data---------- #
 	logger.log_event("Loading data...")
@@ -56,7 +58,8 @@ def save_planet(logger, name, epochs, size, batch_size, treshold, class_weight, 
 	else:
 		architecture = m.SimpleNet64_2(size, output_size=len(labels))
 	model = Model(inputs=architecture.input, outputs=architecture.output)
-	model.compile(loss='binary_crossentropy', optimizer='adam')
+	optimizer = Adam(lr=learning_rate)
+	model.compile(loss='binary_crossentropy', optimizer=optimizer)
 	callbacks = [EarlyStopping(monitor='val_loss', patience=6, verbose=1),
 				ModelCheckpoint('../models/{}_{}.h5'.format(logger.ts, name),
 				 monitor='val_loss', save_best_only=True, verbose=1)]
@@ -130,6 +133,7 @@ def main():
 	parser.add_argument('epochs', type=int, help="function to execute")
 	parser.add_argument('size', type=int, choices=(32,64,96,128), help='image size used for training')
 	parser.add_argument('-b','--batch_size', type=int, default=96, help='determines batch size')
+	parser.add_argument('-l','--learning_rate', type=float, default=1e-3, help='determines learning rate')
 	parser.add_argument('-t','--treshold', type=float, default=0.9, help='cutoff score for storing models')
 	parser.add_argument('-w','--class_weight', action="store_true", help='Add class weights relevant to their abundance')
 	parser.add_argument('-db','--debug', action="store_true", help='determines batch size')
