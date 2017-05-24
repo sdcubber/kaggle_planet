@@ -75,3 +75,6 @@ tox.ini
 /docs/
 /models/
 /logs/
+/HPC/
+/HPC/job_template.sh
+/logs/_log.txt

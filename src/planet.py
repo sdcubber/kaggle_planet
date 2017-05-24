@@ -33,7 +33,7 @@ import plots.plot_utils as pu
 import log_utils as lu
 
 
-def save_planet(logger, name, epochs, size, batch_size, treshold, debug=False):
+def save_planet(logger, name, epochs, size, batch_size, treshold, class_weight, debug=False):
 	
 	# -------load data---------- #
 	logger.log_event("Loading data...")
@@ -58,15 +58,19 @@ def save_planet(logger, name, epochs, size, batch_size, treshold, debug=False):
 	model = Model(inputs=architecture.input, outputs=architecture.output)
 	model.compile(loss='binary_crossentropy', optimizer='adam')
 	callbacks = [EarlyStopping(monitor='val_loss', patience=3, verbose=1),
-				ModelCheckpoint(os.path.join('../models','{}_{}.h5'.format(logger.ts, name)),
+				ModelCheckpoint('../models/{}_{}.h5'.format(logger.ts, name),
 				 monitor='val_loss', save_best_only=True, verbose=1)]
 
 
 	# --------training model--------- #
 	logger.log_event("Training model...")
 	generator = m.DataAugmenter()
+	if class_weight:
+		class_weights = fu.class_weights(y_train)
+	else:
+		class_weights = None
 	history = model.fit(x=x_train, y=y_train, epochs=epochs, verbose=1,
-						batch_size=batch_size, class_weight='auto', validation_data=(x_valid, y_valid),
+						batch_size=batch_size, class_weight=class_weights, validation_data=(x_valid, y_valid),
 						callbacks=callbacks)
 	generator.fit(x_train)
 
@@ -120,7 +124,6 @@ def save_planet(logger, name, epochs, size, batch_size, treshold, debug=False):
 		logger.log_event('Low score - not storing anything.')
 
 
-
 def main():
 	parser = argparse.ArgumentParser(description='Neural network to gain money')
 	parser.add_argument('name', type=str, help="name of your model")
@@ -128,6 +131,7 @@ def main():
 	parser.add_argument('size', type=int, choices=(32,64,96,128), help='image size used for training')
 	parser.add_argument('-b','--batch_size', type=int, default=96, help='determines batch size')
 	parser.add_argument('-t','--treshold', type=float, default=0.9, help='cutoff score for storing models')
+	parser.add_argument('-w','--class_weight', action="store_true", help='Add class weights relevant to their abundance')
 	parser.add_argument('-db','--debug', action="store_true", help='determines batch size')
 	
 	args = parser.parse_args()

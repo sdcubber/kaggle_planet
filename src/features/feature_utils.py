@@ -10,6 +10,7 @@ Helper functions
 import os
 import time
 import h5py
+import math
 import random
 import pandas as pd
 import numpy as np
@@ -25,11 +26,30 @@ from keras.preprocessing.image import ImageDataGenerator
 from keras.layers.advanced_activations import PReLU
 #--------------#
 
-def dirs():
-    data_dir = '../data/'
 
-    dirdict ={'data_dir': npdir}
-    return(dirdict)
+
+def class_weights(y_train, mu=0.50):
+    """Compute smooth class weights for imbalanced data
+    Based on https://datascience.stackexchange.com/questions/13490/how-to-set-class-weights-for-imbalanced-classes-in-keras/16467
+    mu is a(nother) tunable parameter.
+    Inputs
+    ------
+    y_train: training data label matrix
+    Returns
+    ------
+    weights_dict: {label_indicator: weight}
+    """
+    label_dict = {i:np.sum(y_train[:,i]) for i in range(y_train.shape[1])}
+
+    total = np.sum(list(label_dict.values()))
+    keys = label_dict.keys()
+    weights_dict = dict()
+
+    for key in keys:
+        score = math.log(mu*total/float(label_dict[key]))
+        weights_dict[key] = score if score > 1.0 else 1.0
+
+    return weights_dict
 
 def load_data(size):
 	df_train = pd.read_csv("../data/interim/labels.csv")
