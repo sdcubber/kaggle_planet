@@ -1,5 +1,19 @@
-neural_cake
+planet_2
 ==============================
+
+DATA
+------
+place **labels.csv** and **test.csv** in
+
+`data/interim`
+
+place **y_train.h5**, **test_jpg_32x32.h5** and **train_jpg_32x32.h5** in 
+
+`data/processed`
+
+## Good to go!
+
+
 
 A template module for neural networks
 
