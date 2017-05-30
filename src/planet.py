@@ -7,19 +7,9 @@ import sys
 import time
 import argparse
 import json
-import h5py
 import pandas as pd
 import numpy as np
 from sklearn.metrics import fbeta_score
-import keras as k
-from keras.models import Model, Input
-from keras.layers import Dense, Dropout, Flatten, Concatenate, Activation
-from keras.layers import Conv2D, MaxPooling2D, AveragePooling2D, GlobalAveragePooling2D
-from keras.layers.normalization import BatchNormalization
-from keras.callbacks import EarlyStopping, ModelCheckpoint
-from keras.preprocessing.image import ImageDataGenerator
-from keras.optimizers import Adam
-from keras.layers.advanced_activations import PReLU
 from sklearn.model_selection import train_test_split
 
 
@@ -100,8 +90,7 @@ def save_planet(logger, name, epochs, size, batch_size, learning_rate,
 	# -------selecting threshold-------- #
 	logger.log_event('Finding best threshold...')
 	best_anokas = fo.find_thresholds(y_full, p_full, y_valid, p_valid)
-	from sklearn.metrics import fbeta_score
-	
+
 	logger.log_event('Scoring...')
 	score =  fbeta_score(y_valid, p_valid > best_anokas, beta=2, average='samples')
 	score = str(np.round(score,3))
