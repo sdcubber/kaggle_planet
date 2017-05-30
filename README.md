@@ -3,19 +3,32 @@ planet_2
 
 DATA
 ------
-place **labels.csv** and **test.csv** in
+Place the files **train_labels.csv** and **test_labels.csv** in 
 
-`data/interim`
+`data/raw/`
 
-place **y_train.h5**, **test_jpg_32x32.h5** and **train_jpg_32x32.h5** in 
+Place the folders **train-tif**, **train-jpg**, **test-tif**, **test-jpg** in
 
-`data/processed`
+`data/raw/`
 
-## Good to go!
+To process data, use the function **data_convert.py** in *src/*.
+
+consult the help function `python data_convert.py -h` for all functionalities
+
+#### examples
+
+to create 32x32 training images of the RGB channel run the following command:
+
+`python data_convert.py ../data/raw/train-jpg ../data/raw/train_labels.csv 32 train_RBG`
+
+to extract NDVI images from the tif training data run:
+
+`python data_convert.py ../data/raw/train-tif ../data/raw/train_labels.csv 32 train_NDVI -p NDVI`
 
 
+**all data is pickled and saved in `data/processed`**
 
-A template module for neural networks
+
 
 Project Organization
 ------------
