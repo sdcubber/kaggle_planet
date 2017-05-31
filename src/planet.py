@@ -26,9 +26,9 @@ import plots.plot_utils as pu
 import log_utils as lu
 
 
-def save_planet(logger, name, epochs, size, batch_size, learning_rate, 
+def save_planet(logger, name, epochs, size, batch_size, learning_rate,
 				treshold, class_weight, debug=False, extra=None, parallel=False):
-	
+
 	# -------load data---------- #
 	logger.log_event("Loading data...")
 	labels, df_train, df_test, x_train, y_train, x_test = fu.load_data(size, parallel)
@@ -37,7 +37,7 @@ def save_planet(logger, name, epochs, size, batch_size, learning_rate,
 
 	# -------normalize ------- #
 	logger.log_event("Preprocessing features...")
-	
+
 	x_train_norm, x_valid_norm, x_test_norm = fu.normalize_data(x_train, x_valid, x_test)
 	# --------load model--------- #
 	logger.log_event("Initializing model...")
@@ -131,10 +131,10 @@ def main():
 	parser.add_argument('-db','--debug', action="store_true", help='determines batch size')
 	parser.add_argument('-X', '--extra', type=str, default=None, choices=(None,'NDVI','NDWI'), help='add infrared channel')
 	parser.add_argument('-p','--parallel', action="store_true", help='use parallel convolutions for extra channel')
-	
+
 	args = parser.parse_args()
 	logger = lu.logger_class(args, time.strftime("%d%m%Y_%H:%M"), time.clock())
-	
+
 	save_planet(logger,**vars(args))
 
 
