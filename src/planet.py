@@ -18,7 +18,6 @@ from sklearn.model_selection import train_test_split
 
 
 # Import modules
-import data.data_utils as du
 import features.feature_utils as fu
 import models.model_utils as mu
 import models.models as m
