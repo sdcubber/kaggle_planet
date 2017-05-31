@@ -22,7 +22,7 @@ def main():
 	parser.add_argument('labels', type=str, help="file containing labels")
 	parser.add_argument('size', type=int, choices=(32,64,128,256), help="saving tag")
 	parser.add_argument('tag', type=str, help="saving tag")
-	parser.add_argument('-p', '--process', type=str, default=None, choices=(None, 'NDWI', 'NDVI'), 
+	parser.add_argument('-p', '--process', type=str, default=None, choices=(None,'RGB','NDWI', 'NDVI'), 
 						help="process images")
 	args = parser.parse_args()
 	create_data(**vars(args))
