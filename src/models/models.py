@@ -8,6 +8,45 @@ from keras.layers.normalization import BatchNormalization
 from keras.callbacks import EarlyStopping, ModelCheckpoint
 from keras.preprocessing.image import ImageDataGenerator
 
+def GFM_power_classifier(n_labels, features, predictions, unique_combinations):
+    """GFM algorithm that uses estimates from the joint probability from a label power set classifier.
+    See http://jmlr.org/papers/volume15/waegeman14a/waegeman14a.pdf for details."""
+    E_F = []
+    optimal_predictions = []
+
+    for instance in range(features.shape[0]):
+        E = []
+        h = []
+
+        D = np.ndarray(shape=(n_labels, n_labels))
+
+        for i in range(17):
+            occurring_combinations = unique_combinations[unique_combinations[:,i] == 1,:]
+
+            P_y = predictions[instance, unique_combinations[:,i] == 1]
+            s_y = np.sum(occurring_combinations, axis=1)
+
+            for k in range(17):
+                D[i, k] = np.sum((2*P_y)/(s_y + (k+1)))
+
+
+        for k in range(n_labels):
+            # solve inner optimization
+            h_k = np.zeros(n_labels)
+            h_k[np.argsort(D[:,k])[::-1][:k+1]] = 1 # Set h_i=1 to k labels with highest delta_ik
+            h.append(h_k)
+
+            # store a value of ...
+            E.append(np.dot(h_k,D[:,k]))
+
+        # solve outer maximization problem
+        h_F = h[np.argmax(E)]
+        E_f = E[np.argmax(E)]
+
+        # Return optimal predictor hF, E[F(Y, hF)]
+        optimal_predictions.append(h_F)
+        E_F.append(E_f)
+    return(np.array(optimal_predictions), E_F)
 
 def DataAugmenter():
 	"""Return ImageDataGenerator with specified settings"""
@@ -179,7 +218,7 @@ class SimpleNet64_2_plus_par(object):
 			conv_0 = Activation('relu')((BatchNormalization(epsilon=0.00001, momentum=0.1)(Conv2D(filtersize, (1,1))(image_input))))
 			conv_0 = Activation('relu')((BatchNormalization(epsilon=0.00001, momentum=0.1)(Conv2D(filtersize, (1,1))(conv_0))))
 			conv_0 = Activation('relu')((BatchNormalization(epsilon=0.00001, momentum=0.1)(Conv2D(filtersize, (1,1))(conv_0))))
-			
+
 			return(conv_0)
 
 		def add_block(self, input, filtersize):
@@ -193,7 +232,7 @@ class SimpleNet64_2_plus_par(object):
 
 		## RGB
 		conv_0_rgb = preprocessing(self, image_input[:,:,:,:3], 8)
-		
+
 		# Block 1
 		conv_1_rgb = add_block(self, conv_0_rgb, 32)
 		conv_1_rgb_out = GlobalAveragePooling2D()(conv_1_rgb)
@@ -211,9 +250,9 @@ class SimpleNet64_2_plus_par(object):
 		conv_4_rgb = add_block(self, conv_3_rgb, 128)
 		conv_4_rgb = Dropout(0.5)(conv_4_rgb)
 		conv_4_rgb_out = GlobalAveragePooling2D()(conv_4_rgb)
-		
+
 		## NIR
-		
+
 		conv_0_nir = preprocessing(self, image_input[:,:,:,3], 8)
 		# Block 1
 		conv_1_nir = add_block(self, conv_0_nir, 32)
@@ -232,10 +271,10 @@ class SimpleNet64_2_plus_par(object):
 		conv_4_nir = add_block(self, conv_3_nir, 128)
 		conv_4_nir = Dropout(0.5)(conv_4_nir)
 		conv_4_nir_out = GlobalAveragePooling2D()(conv_4_nir)
-		
-		
-		
-		
+
+
+
+
 
 		# Concatenate all the outputs
 		conv_concatenated = k.layers.concatenate([conv_1_rgb_out, conv_2_rgb_out, conv_3_rgb_out, conv_4_rgb_out, conv_1_nir_out, conv_2_nir_out, conv_3_nir_out, conv_4_nir_out])
