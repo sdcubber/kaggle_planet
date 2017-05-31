@@ -37,12 +37,8 @@ def save_planet(logger, name, epochs, size, batch_size, learning_rate,
 
 	# -------normalize ------- #
 	logger.log_event("Preprocessing features...")
-	x_min = x_train.min(axis=(0,1,2))
-	x_max = x_train.max(axis=(0,1,2))
-	x_train, x_valid = fu.normalize(x_train, x_min, x_max), fu.normalize(x_valid, x_min, x_max)
-	x_test = fu.normalize(x_test, x_min, x_max)
 	
-	
+	x_train_norm, x_valid_norm, x_test_norm = fu.normalize_data(x_train, x_valid, x_test)
 	# --------load model--------- #
 	logger.log_event("Initializing model...")
 	if debug:
@@ -69,10 +65,10 @@ def save_planet(logger, name, epochs, size, batch_size, learning_rate,
 		class_weights = fu.class_weights(y_train)
 	else:
 		class_weights = None
-	history = model.fit(x=x_train, y=y_train, epochs=epochs, verbose=1,
-						batch_size=batch_size, class_weight=class_weights, validation_data=(x_valid, y_valid),
+	history = model.fit(x=x_train_norm, y=y_train, epochs=epochs, verbose=1,
+						batch_size=batch_size, class_weight=class_weights, validation_data=(x_valid_norm, y_valid),
 						callbacks=callbacks)
-	generator.fit(x_train)
+	generator.fit(x_train_norm)
 
 
 	# --------log time---------#
@@ -89,9 +85,9 @@ def save_planet(logger, name, epochs, size, batch_size, learning_rate,
 	# ---------Making predictions-----------#
 	logger.log_event("Predicting training and validation data...")
 	# Calculate score on the validation set with the training set-thresholds
-	x_full, y_full = np.concatenate((x_train, x_valid), axis=0), np.concatenate((y_train, y_valid), axis=0)
+	x_full, y_full = np.concatenate((x_train_norm, x_valid_norm), axis=0), np.concatenate((y_train, y_valid), axis=0)
 	p_full = model.predict(x_full, verbose=1)
-	p_valid = model.predict(x_valid, verbose=1)
+	p_valid = model.predict(x_valid_norm, verbose=1)
 
 
 	# -------selecting threshold-------- #
@@ -106,7 +102,7 @@ def save_planet(logger, name, epochs, size, batch_size, learning_rate,
 	# -------Storing models-------- #
 	if float(score) > treshold:
 		logger.log_event('Predicting test data...')
-		preds = model.predict(x_test, verbose=1)
+		preds = model.predict(x_test_norm, verbose=1)
 		p_test_binary = (preds > best_anokas).astype(int)
 
 		logger.log_event('Generating submission file...')

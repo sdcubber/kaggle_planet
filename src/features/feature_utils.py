@@ -85,10 +85,16 @@ def load_data(size, parallel):
 			x_test = np.concatenate((x_test, x_test_add),axis=3)
 	return labels, df_train, df_test, x_train, y_train, x_test
 
-
-def normalize(x, x_min, x_max):
-    return((x-x_min)/(x_max-x_min))
-
+def normalize_data(x_train, x_valid, x_test):
+	x_train_mean = np.mean(x_train)
+	x_train_std = np.std(x_train)
+	
+	x_train_norm = (x_train - x_train_mean)/x_train_std
+	x_valid_norm = (x_valid - x_train_mean)/x_train_std
+	x_test_norm = (x_test - x_train_mean)/x_train_std
+	
+	return x_train_norm, x_valid_norm, x_test_norm
+	
 def resample_data(pos, y, x):
     """Resample features and labels so that they contain an equal amount of positive and negatives
     for the label at position pos
