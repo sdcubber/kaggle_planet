@@ -38,7 +38,7 @@ def process_images(data_dir, data_labels, size, extension, process=None):
 
 def pickle_image_data(data, save_dir, tag, size):
     with h5py.File(os.path.join(save_dir, '{}_{}x{}.h5'.format(tag, size, size)), 'w') as hf:
-        hf.create_dataset('{}{}x{}'.format(tag, size, size), data=data)
+        hf.create_dataset('imgs', data=data)
 
 if __name__ == '__main__':
 	

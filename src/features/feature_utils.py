@@ -51,7 +51,7 @@ def class_weights(y_train, mu=0.50):
 
     return weights_dict
 
-def load_data(size):
+def load_data(size, parallel):
 	df_train = pd.read_csv("../data/interim/labels.csv")
 	df_test = pd.read_csv("../data/interim/test.csv")
 	
@@ -67,12 +67,22 @@ def load_data(size):
 	with h5py.File('../data/processed/y_train.h5', 'r') as hf:
 		y_train = hf['y_train'][:]
 
-	with h5py.File('../data/processed/train_jpg_{}x{}.h5'.format(size,size), 'r') as hf:
-		x_train = hf['train{}x{}'.format(size,size)][:]
+	with h5py.File('../data/processed/train_RGB_{}x{}.h5'.format(size,size), 'r') as hf:
+		x_train = hf['imgs'][:]
+	print(np.shape(x_train))
 
-	with h5py.File('../data/processed/test_jpg_{}x{}.h5'.format(size,size), 'r') as hf:
-		x_test = hf['test{}x{}'.format(size, size)][:]
-	
+	with h5py.File('../data/processed/test_RGB_{}x{}.h5'.format(size,size), 'r') as hf:
+		print(hf)
+		x_test = hf['imgs'][:]
+	if parallel:
+		with h5py.File('../data/processed/train_NDWI_{}x{}.h5'.format(size,size), 'r') as hf:
+			x_train_add = hf['imgs'][:].reshape(-1,size,size,1)
+			print(np.shape(x_train_add),np.shape(x_train))
+			x_train = np.concatenate((x_train, x_train_add),axis=3)
+			print(np.shape(x_train))
+		with h5py.File('../data/processed/test_NDWI_{}x{}.h5'.format(size,size), 'r') as hf:
+			x_test_add = hf['imgs'][:].reshape(-1,size,size,1)
+			x_test = np.concatenate((x_test, x_test_add),axis=3)
 	return labels, df_train, df_test, x_train, y_train, x_test
 
 

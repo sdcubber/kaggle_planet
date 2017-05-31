@@ -9,6 +9,9 @@ import argparse
 import json
 import pandas as pd
 import numpy as np
+from keras.models import Model
+from keras.optimizers import Adam
+from keras.callbacks import EarlyStopping, ModelCheckpoint
 from sklearn.metrics import fbeta_score
 from sklearn.model_selection import train_test_split
 
@@ -25,11 +28,11 @@ import log_utils as lu
 
 
 def save_planet(logger, name, epochs, size, batch_size, learning_rate, 
-				treshold, class_weight, debug=False):
+				treshold, class_weight, debug=False, extra=None, parallel=False):
 	
 	# -------load data---------- #
 	logger.log_event("Loading data...")
-	labels, df_train, df_test, x_train, y_train, x_test = fu.load_data(size)
+	labels, df_train, df_test, x_train, y_train, x_test = fu.load_data(size, parallel)
 	x_train, x_valid, y_train, y_valid = train_test_split(x_train, y_train, test_size=0.10)
 
 
@@ -45,6 +48,11 @@ def save_planet(logger, name, epochs, size, batch_size, learning_rate,
 	logger.log_event("Initializing model...")
 	if debug:
 		architecture = m.SimpleCNN(size, output_size=len(labels))
+	if extra != None:
+		if parallel:
+			architecture = m.SimpleNet64_2_plus_par(size, output_size=len(labels))
+		else:
+			architecture = m.SimpleNet64_2_plus(size, output_size=len(labels))
 	else:
 		architecture = m.SimpleNet64_2(size, output_size=len(labels))
 	model = Model(inputs=architecture.input, outputs=architecture.output)
@@ -126,9 +134,12 @@ def main():
 	parser.add_argument('-t','--treshold', type=float, default=0.9, help='cutoff score for storing models')
 	parser.add_argument('-w','--class_weight', action="store_true", help='Add class weights relevant to their abundance')
 	parser.add_argument('-db','--debug', action="store_true", help='determines batch size')
+	parser.add_argument('-X', '--extra', type=str, default=None, choices=(None,'NDVI','NDWI'), help='add infrared channel')
+	parser.add_argument('-p','--parallel', action="store_true", help='use parallel convolutions for extra channel')
 	
 	args = parser.parse_args()
 	logger = lu.logger_class(args, time.strftime("%d%m%Y_%H:%M"), time.clock())
+	
 	save_planet(logger,**vars(args))
 
 
