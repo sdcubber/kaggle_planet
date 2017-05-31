@@ -19,17 +19,15 @@ def process_images(data_dir, data_labels, size, extension, process=None):
 
     for f, tags in tqdm(data_labels.values):
         fpath = os.path.join(data_dir,'{}.{}'.format(f, extension))
-        try:
-            img = io.imread(fpath)
-            if process == 'NDWI':
-                img_layer = get_rgb(img, [3, 2, 1]) # NIR-R-G
-                img = (img_layer[:, :, 2] - img_layer[:, :, 0]) / (img_layer[:, :, 2] + img_layer[:, :, 0])
-            if process == 'NDVI':
-                img = ndvi(img, 2, 3)
-            data.append(cv2.resize(img, (size, size)))
-        except:
-            print('Could not load file: {}'.format(fpath))
-            break
+        
+        img = io.imread(fpath)
+        if process == 'NDWI':
+            img_layer = get_rgb(img, [3, 2, 1]) # NIR-R-G
+            img = (img_layer[:, :, 2] - img_layer[:, :, 0]) / (img_layer[:, :, 2] + img_layer[:, :, 0])
+        if process == 'NDVI':
+            img = ndvi(img, 2, 3)
+        data.append(cv2.resize(img, (size, size)))
+        
     
     print('Done')
     
