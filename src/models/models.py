@@ -327,9 +327,6 @@ class SimpleNet64_2_plus_par(object):
 		self.output = dense_output
 		self.input = image_input
 
-	def __str__(self):
-        return """SimpleNet2"""
-
 
 class SimpleNet64_2_plus(object):
 	def __init__(self, size, output_size):
@@ -379,8 +376,6 @@ class SimpleNet64_2_plus(object):
 		self.output = dense_output
 		self.input = image_input
 
-	def __str__(self):
-        return """SimpleNet2"""
 
 class SimpleNet64_2(object):
 	def __init__(self, size, output_size):
@@ -430,8 +425,6 @@ class SimpleNet64_2(object):
 		self.output = dense_output
 		self.input = image_input
 
-	def __str__(self):
-	    return """SimpleNet2"""
 
 class SimpleNet_multitask(object):
 	def __init__(self, size, output_size_multiclass, output_size_multilabel):
@@ -482,8 +475,3 @@ class SimpleNet_multitask(object):
 		self.output_multiclass = dense_output_multiclass
 		self.output_multilabel = dense_output_multilabel
 		self.input = image_input
-
-	def __str__(self):
-        return """SimpleNet2 with two different outputs to incorporate prior knowledge about the labels.
-		Weather labels are treated as multiclass classification (as should be the case)
-		All other labels are treated as multilabel classification"""
