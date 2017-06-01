@@ -15,8 +15,6 @@ from keras.callbacks import EarlyStopping, ModelCheckpoint
 from sklearn.metrics import fbeta_score
 from sklearn.model_selection import train_test_split
 
-
-
 # Import modules
 import features.feature_utils as fu
 import models.model_utils as mu
@@ -24,14 +22,17 @@ import models.models as m
 import models.F_optimizers as fo
 import plots.plot_utils as pu
 import log_utils as lu
-
+from labels_auto_encoder import load_autoencoder 
 
 def save_planet(logger, name, epochs, size, batch_size, learning_rate,
-				treshold, class_weight, debug=False, extra=None, parallel=False):
+				treshold, class_weight, debug=False, extra=None, parallel=False, autoencoder=None):
 
 	# -------load data---------- #
 	logger.log_event("Loading data...")
 	labels, df_train, df_test, x_train, y_train, x_test = fu.load_data(size, extra)
+	if autoencoder != None:
+		_, encoder, decoder= load_autoencoder(autoencoder)
+		y_train = encoder.predict(y_train)
 	x_train, x_valid, y_train, y_valid = train_test_split(x_train, y_train, test_size=0.10)
 
 	# -------normalize ------- #
@@ -41,14 +42,14 @@ def save_planet(logger, name, epochs, size, batch_size, learning_rate,
 	# --------load model--------- #
 	logger.log_event("Initializing model...")
 	if debug:
-		architecture = m.SimpleCNN(size, output_size=len(labels))
+		architecture = m.SimpleCNN(size, output_size=len(y_train[0]))
 	if extra != None:
 		if parallel:
-			architecture = m.SimpleNet64_2_plus_par(size, output_size=len(labels))
+			architecture = m.SimpleNet64_2_plus_par(size, output_size=len(y_train[0]))
 		else:
-			architecture = m.SimpleNet64_2_plus(size, output_size=len(labels))
+			architecture = m.SimpleNet64_2_plus(size, output_size=len(y_train[0]))
 	else:
-		architecture = m.SimpleNet64_2(size, output_size=len(labels))
+		architecture = m.SimpleNet64_2(size, output_size=len(y_train[0]))
 	model = Model(inputs=architecture.input, outputs=architecture.output)
 	optimizer = Adam(lr=learning_rate)
 	model.compile(loss='binary_crossentropy', optimizer=optimizer)
@@ -88,7 +89,11 @@ def save_planet(logger, name, epochs, size, batch_size, learning_rate,
 	p_full = model.predict(x_full, verbose=1)
 	p_valid = model.predict(x_valid_norm, verbose=1)
 
-
+	##########DECODE SEQUENCES##############
+	if autoencoder != None:
+		p_valid = decoder.predict(p_valid)
+		p_full = decoder.predict(p_full)
+	
 	# -------selecting threshold-------- #
 	logger.log_event('Finding best threshold...')
 	best_anokas = fo.find_thresholds(y_full, p_full, y_valid, p_valid)
@@ -130,7 +135,7 @@ def main():
 	parser.add_argument('-db','--debug', action="store_true", help='determines batch size')
 	parser.add_argument('-X', '--extra', type=str, default=None, choices=(None,'RGB','NDVI','NDWI'), help='add infrared channel')
 	parser.add_argument('-p','--parallel', action="store_true", help='use parallel convolutions for extra channel')
-
+	parser.add_argument('-E', '--autoencoder', type=str, default=None, help='Select auto-encoder to train network with')
 	args = parser.parse_args()
 	logger = lu.logger_class(args, time.strftime("%d%m%Y_%H:%M"), time.clock())
 
