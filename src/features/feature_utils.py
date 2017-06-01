@@ -77,6 +77,7 @@ def load_data(size, extra):
 	if extra:
 		with h5py.File('../data/processed/train_NDWI_{}x{}.h5'.format(size,size), 'r') as hf:
 			x_train_add = hf['imgs'][:].reshape(-1,size,size,1)
+			print(x_train.shape, x_train_add.shape)
 			x_train = np.concatenate((x_train, x_train_add),axis=3)
 		with h5py.File('../data/processed/test_NDWI_{}x{}.h5'.format(size,size), 'r') as hf:
 			x_test_add = hf['imgs'][:].reshape(-1,size,size,1)
