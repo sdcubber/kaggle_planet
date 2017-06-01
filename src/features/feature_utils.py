@@ -54,7 +54,7 @@ def class_weights(y_train, mu=0.50):
 def load_data(size, extra):
 	df_train = pd.read_csv("../data/interim/labels.csv")
 	df_test = pd.read_csv("../data/interim/test.csv")
-	
+
 	# list of possible labels
 	flatten = lambda l: [item for sublist in l for item in sublist]
 	labels = sorted(list(set(flatten([l.split(' ') for l in df_train['tags'].values]))))
@@ -87,13 +87,13 @@ def load_data(size, extra):
 def normalize_data(x_train, x_valid, x_test):
 	x_train_mean = np.mean(x_train)
 	x_train_std = np.std(x_train)
-	
+
 	x_train_norm = (x_train - x_train_mean)/x_train_std
 	x_valid_norm = (x_valid - x_train_mean)/x_train_std
 	x_test_norm = (x_test - x_train_mean)/x_train_std
-	
+
 	return x_train_norm, x_valid_norm, x_test_norm
-	
+
 def resample_data(pos, y, x):
     """Resample features and labels so that they contain an equal amount of positive and negatives
     for the label at position pos
@@ -129,4 +129,4 @@ def log_results(predictions, df_train, df_test, name, timestamp, score):
 	results = pd.DataFrame()
 	results['image_name'] = df_test.image_name.values
 	results['tags'] = preds
-	results.to_csv('../logs/predictions/{}_{}_{}.csv'.format(timestamp, name, score))
+	results.to_csv('../logs/predictions/{}_{}_{}.csv'.format(timestamp, name, score), index=False)
