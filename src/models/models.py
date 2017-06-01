@@ -431,7 +431,7 @@ class SimpleNet64_2(object):
 		self.input = image_input
 
 	def __str__(self):
-		return """SimpleNet2"""
+	    return """SimpleNet2"""
 
 class SimpleNet_multitask(object):
 	def __init__(self, size, output_size_multiclass, output_size_multilabel):
