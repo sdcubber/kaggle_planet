@@ -2,7 +2,6 @@ import keras
 import argparse
 import h5py
 #import json_file
-#import json
 import sys
 from keras.models import Model
 from keras.layers import Input, Dense, Dropout
@@ -26,37 +25,47 @@ def build_label_autoencoder(name, noise_input=0.2, size_layers=[20, 10],
 
     # inputs
     inputs = Input((n_labels,), name='input')
-    layer_output = Dropout(rate=noise_input)(inputs)
+    encoded = Dropout(rate=noise_input)(inputs)
 
     # encoding
     for n_hidden, dropout_rate in zip(size_layers, dropout_layers):
-        layer_output = Dense(units=n_hidden, activation='relu')(layer_output)
-        layer_output = Dropout(rate=dropout_rate)(layer_output)
+        encoded = Dense(units=n_hidden, activation='relu')(encoded)
+        encoded = Dropout(rate=dropout_rate)(encoded)
 
-    encoding = Dense(units=n_code, activation='sigmoid', name='encoding')(layer_output)
-    layer_output = encoding
+    encoded = Dense(units=n_code, activation='sigmoid', name='encoding')(encoded)
 
     # decoding
     first_layer = True
     for n_hidden, dropout_rate in zip(reversed(size_layers),
                                                     reversed(dropout_layers)):
         if first_layer:
-            layer_output = Dense(units=n_hidden, activation='relu',
-            name='decoding')(layer_output)
+            decoded = Dense(units=n_hidden, activation='relu',
+            name='decoding')(encoded) 
             first_layer = False
         else:
-            layer_output = Dense(units=n_hidden, activation='relu')(layer_output)
-        layer_output = Dropout(rate=dropout_rate)(layer_output)
+            decoded = Dense(units=n_hidden, activation='relu')(decoded)
+        decoded = Dropout(rate=dropout_rate)(decoded)
 
-    outputs = Dense(units=n_labels, activation='sigmoid')(layer_output)
+    decoded = Dense(units=n_labels, activation='sigmoid', name='out')(decoded)
 
-    model = Model(inputs=inputs, outputs=outputs)
-    model.compile(optimizer='Adam', loss='binary_crossentropy',
-                  metrics=['accuracy'])
-
-    model.fit(x=y_train, y=y_train, batch_size=batch_size, epochs=epochs,
-                                                    shuffle=True)
-    model.save('../models/{}_weights.h5'.format(name))
+    autoencoder = Model(inputs=inputs, outputs=decoded)
+    autoencoder.compile(optimizer='Adam', loss='binary_crossentropy', metrics=['accuracy'])
+    autoencoder.fit(x=y_train, y=y_train, batch_size=batch_size, epochs=epochs, shuffle=True)
+    autoencoder.save('../models/{}_autoencoder.h5'.format(name))
+    encoder = Model(inputs=inputs, outputs=encoded)
+    encoder.save('../models/{}_encoder.h5'.format(name))
+    
+    # building decoder
+    encoded_input = Input(shape=(n_code,))
+    
+    ### NOT WORKING FOR DROPOUT LAYERS != 2 ###
+    d1 = autoencoder.layers[-5]
+    d2 = autoencoder.layers[-4]
+    d3 = autoencoder.layers[-3]
+    d4 = autoencoder.layers[-2]
+    d5 = autoencoder.layers[-1]
+    decoder = Model(inputs=encoded_input, outputs=d5(d4(d3(d2(d1(encoded_input))))))
+    decoder.save('../models/{}_decoder.h5'.format(name))
 
     #with open('../models/{}_architecture.json'.format(name), 'w') as json_file:
     #    json_file.write(model.to_json())
@@ -65,12 +74,11 @@ def load_autoencoder(name):
     """
     Loads a pretrained autoencoder and returns the encoder and decoder
     """
-    model = load_model('../models/{}_weights.h5'.format(name))
-    encoder = Model(inputs=model.input,
-                            outputs=model.get_layer('encoding').output)
-    decoder = Model(inputs=model.get_layer('decoding').input,
-                            outputs=model.output)
-    return encoder, decoder
+    autoencoder = load_model('../models/{}_autoencoder.h5'.format(name))
+    encoder = load_model('../models/{}_encoder.h5'.format(name))
+    decoder = load_model('../models/{}_decoder.h5'.format(name))
+
+    return autoencoder, encoder, decoder
     #model = model_from_json('../models/{}_architecture.json'.format(name))
 
 def main():
