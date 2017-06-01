@@ -17,17 +17,51 @@ import random
 def find_thresholds(y_train, p_train, y_valid, p_valid):
     best_anokas = optimise_f2_thresholds(y_train, p_train)
 
-    p_valid_binary = p_valid > 0.2
+    fixed_threshold = 0.2
+    p_valid_binary = p_valid > fixed_threshold
     score_valid = fbeta_score(y_valid, p_valid_binary, beta=2, average='samples')
+    print('Score on the validation set with fixed threshold {}: {}'.format(fixed_threshold, score_valid))
 
     p_valid_binary_best = p_valid > best_anokas
     score_valid_best = fbeta_score(y_valid, p_valid_binary_best, beta=2, average='samples')
-
-    print('Score on the validation set without optimization: {}'.format(score_valid))
     print('Score on the validation set with best threshold: {}'.format(score_valid_best))
-
+    print('Optimized thresholds: {}'.format(best_anokas))
     return(best_anokas)
 
+
+
+def optimise_f2_thresholds(y, p, verbose=False, resolution=100):
+    """Optimize individual thresholds one by one. Code from anokas.
+    Inputs
+    ------
+    y: numpy array, true labels
+    p: numpy array, predicted labels
+    """
+    n_labels = y.shape[1]
+
+    def mf(x):
+        p2 = np.zeros_like(p)
+        for i in range(n_labels):
+            p2[:, i] = (p[:, i] > x[i]).astype(np.int)
+        score = fbeta_score(y, p2, beta=2, average='samples')
+        return score
+
+    x = [0.2]*n_labels
+
+    for i in range(n_labels):
+        best_i2 = 0
+        best_score = 0
+        for i2 in range(resolution):
+            i2 /= resolution
+            x[i] = i2
+            score = mf(x)
+            if score > best_score:
+                best_i2 = i2
+                best_score = score
+            x[i] = best_i2
+            if verbose:
+                print(i, best_i2, best_score)
+    return x
 
 
 def truncate_probabilities(probabilities):
@@ -105,37 +139,3 @@ def find_f2score_threshold_2D(p_0, p_1, y_valid):
 #                                           disp=True, T=2.0, stepsize=0.1)
 #
 #    return(best_set)
-
-
-def optimise_f2_thresholds(y, p, verbose=False, resolution=100):
-    """Optimize individual thresholds one by one. Code from anokas.
-    Inputs
-    ------
-    y: numpy array, true labels
-    p: numpy array, predicted labels
-    """
-    n_labels = y.shape[1]
-
-    def mf(x):
-        p2 = np.zeros_like(p)
-        for i in range(n_labels):
-            p2[:, i] = (p[:, i] > x[i]).astype(np.int)
-        score = fbeta_score(y, p2, beta=2, average='samples')
-        return score
-
-    x = [0.2]*n_labels
-
-    for i in range(n_labels):
-        best_i2 = 0
-        best_score = 0
-        for i2 in range(resolution):
-            i2 /= resolution
-            x[i] = i2
-            score = mf(x)
-            if score > best_score:
-                best_i2 = i2
-                best_score = score
-            x[i] = best_i2
-            if verbose:
-                print(i, best_i2, best_score)
-    return x
