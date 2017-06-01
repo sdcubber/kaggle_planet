@@ -29,21 +29,23 @@ def save_planet(logger, name, epochs, size, batch_size, learning_rate,
 
 	# -------load data---------- #
 	logger.log_event("Loading data...")
-	labels, df_train, df_test, x_train, y_train, x_test = fu.load_data(size, extra)
+	labels, df_train, df_test, x_train_full, y_train_full_uncoded, x_test = fu.load_data(size, extra)
+	x_train, x_valid, y_train, y_valid = train_test_split(x_train_full, y_train_full_uncoded, test_size=0.10)
+	y_valid_uncoded = y_valid
 	if autoencoder != None:
 		_, encoder, decoder= load_autoencoder(autoencoder)
-		y_train = encoder.predict(y_train)
-	x_train, x_valid, y_train, y_valid = train_test_split(x_train, y_train, test_size=0.10)
+		y_train, y_valid = encoder.predict(y_train), encoder.predict(y_valid)
 
 	# -------normalize ------- #
 	logger.log_event("Preprocessing features...")
 	x_train_norm, x_valid_norm, x_test_norm = fu.normalize_data(x_train, x_valid, x_test)
-
+	x_train_full_norm= np.concatenate((x_train_norm, x_valid_norm), axis=0)
+	
 	# --------load model--------- #
 	logger.log_event("Initializing model...")
 	if debug:
 		architecture = m.SimpleCNN(size, output_size=len(y_train[0]))
-	if extra != None:
+	elif extra != None:
 		if parallel:
 			architecture = m.SimpleNet64_2_plus_par(size, output_size=len(y_train[0]))
 		else:
@@ -85,21 +87,21 @@ def save_planet(logger, name, epochs, size, batch_size, learning_rate,
 	# ---------Making predictions-----------#
 	logger.log_event("Predicting training and validation data...")
 	# Calculate score on the validation set with the training set-thresholds
-	x_full, y_full = np.concatenate((x_train_norm, x_valid_norm), axis=0), np.concatenate((y_train, y_valid), axis=0)
-	p_full = model.predict(x_full, verbose=1)
+	p_full = model.predict(x_train_full_norm, verbose=1)
 	p_valid = model.predict(x_valid_norm, verbose=1)
 
 	##########DECODE SEQUENCES##############
 	if autoencoder != None:
-		p_valid = decoder.predict(p_valid)
 		p_full = decoder.predict(p_full)
+		p_valid = decoder.predict(p_valid)
+
 	
 	# -------selecting threshold-------- #
 	logger.log_event('Finding best threshold...')
-	best_anokas = fo.find_thresholds(y_full, p_full, y_valid, p_valid)
+	best_anokas = fo.find_thresholds(y_train_full_uncoded, p_full, y_valid_uncoded, p_valid)
 
 	logger.log_event('Scoring...')
-	score =  fbeta_score(y_valid, p_valid > best_anokas, beta=2, average='samples')
+	score =  fbeta_score(y_valid_uncoded, p_valid > best_anokas, beta=2, average='samples')
 	score = str(np.round(score,3))
 
 
@@ -107,6 +109,8 @@ def save_planet(logger, name, epochs, size, batch_size, learning_rate,
 	if float(score) > treshold:
 		logger.log_event('Predicting test data...')
 		preds = model.predict(x_test_norm, verbose=1)
+		if autoencode != None:
+			preds = decoder.predict(preds)
 		p_test_binary = (preds > best_anokas).astype(int)
 
 		logger.log_event('Generating submission file...')
