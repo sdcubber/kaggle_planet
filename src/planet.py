@@ -31,14 +31,13 @@ def save_planet(logger, name, epochs, size, batch_size, learning_rate,
 
 	# -------load data---------- #
 	logger.log_event("Loading data...")
-	labels, df_train, df_test, x_train, y_train, x_test = fu.load_data(size, parallel)
+	labels, df_train, df_test, x_train, y_train, x_test = fu.load_data(size, extra)
 	x_train, x_valid, y_train, y_valid = train_test_split(x_train, y_train, test_size=0.10)
-
 
 	# -------normalize ------- #
 	logger.log_event("Preprocessing features...")
-
 	x_train_norm, x_valid_norm, x_test_norm = fu.normalize_data(x_train, x_valid, x_test)
+
 	# --------load model--------- #
 	logger.log_event("Initializing model...")
 	if debug:
@@ -129,7 +128,7 @@ def main():
 	parser.add_argument('-t','--treshold', type=float, default=0.9, help='cutoff score for storing models')
 	parser.add_argument('-w','--class_weight', action="store_true", help='Add class weights relevant to their abundance')
 	parser.add_argument('-db','--debug', action="store_true", help='determines batch size')
-	parser.add_argument('-X', '--extra', type=str, default=None, choices=(None,'NDVI','NDWI'), help='add infrared channel')
+	parser.add_argument('-X', '--extra', type=str, default=None, choices=(None,'RGB','NDVI','NDWI'), help='add infrared channel')
 	parser.add_argument('-p','--parallel', action="store_true", help='use parallel convolutions for extra channel')
 
 	args = parser.parse_args()
