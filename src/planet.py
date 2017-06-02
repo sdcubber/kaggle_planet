@@ -22,25 +22,25 @@ import models.models as m
 import models.F_optimizers as fo
 import plots.plot_utils as pu
 import log_utils as lu
-from labels_auto_encoder import load_autoencoder 
+from labels_auto_encoder import load_autoencoder
 
 def save_planet(logger, name, epochs, size, batch_size, learning_rate,
 				treshold, class_weight, debug=False, extra=None, parallel=False, autoencoder=None):
 
 	# -------load data---------- #
 	logger.log_event("Loading data...")
-	labels, df_train, df_test, x_train_full, y_train_full_uncoded, x_test = fu.load_data(size, extra)
-	x_train, x_valid, y_train, y_valid = train_test_split(x_train_full, y_train_full_uncoded, test_size=0.10)
+	labels, df_train, df_test, x_train_full, y_train_full, x_test = fu.load_data(size, extra)
+	x_train, x_valid, y_train, y_valid = train_test_split(x_train_full, y_train_full, test_size=0.10)
+	y_train_uncoded = y_train
 	y_valid_uncoded = y_valid
 	if autoencoder != None:
-		_, encoder, decoder= load_autoencoder(autoencoder)
+		_, encoder, decoder = load_autoencoder(autoencoder)
 		y_train, y_valid = encoder.predict(y_train), encoder.predict(y_valid)
 
 	# -------normalize ------- #
 	logger.log_event("Preprocessing features...")
 	x_train_norm, x_valid_norm, x_test_norm = fu.normalize_data(x_train, x_valid, x_test)
-	x_train_full_norm= np.concatenate((x_train_norm, x_valid_norm), axis=0)
-	
+
 	# --------load model--------- #
 	logger.log_event("Initializing model...")
 	if debug:
@@ -52,6 +52,7 @@ def save_planet(logger, name, epochs, size, batch_size, learning_rate,
 			architecture = m.SimpleNet64_2_plus(size, output_size=len(y_train[0]))
 	else:
 		architecture = m.SimpleNet64_2(size, output_size=len(y_train[0]))
+
 	model = Model(inputs=architecture.input, outputs=architecture.output)
 	optimizer = Adam(lr=learning_rate)
 	model.compile(loss='binary_crossentropy', optimizer=optimizer)
@@ -87,31 +88,32 @@ def save_planet(logger, name, epochs, size, batch_size, learning_rate,
 	# ---------Making predictions-----------#
 	logger.log_event("Predicting training and validation data...")
 	# Calculate score on the validation set with the training set-thresholds
-	p_full = model.predict(x_train_full_norm, verbose=1)
+	p_train = model.predict(x_train_norm, verbose=1)
 	p_valid = model.predict(x_valid_norm, verbose=1)
 
 	##########DECODE SEQUENCES##############
 	if autoencoder != None:
-		p_full = decoder.predict(p_full)
+		p_train = decoder.predict(p_train)
 		p_valid = decoder.predict(p_valid)
 
-	
 	# -------selecting threshold-------- #
 	logger.log_event('Finding best threshold...')
-	best_anokas = fo.find_thresholds(y_train_full_uncoded, p_full, y_valid_uncoded, p_valid)
+	best_anokas = fo.find_thresholds(y_train_uncoded, p_train, y_valid_uncoded, p_valid)
 
-	logger.log_event('Scoring...')
 	score =  fbeta_score(y_valid_uncoded, p_valid > best_anokas, beta=2, average='samples')
 	score = str(np.round(score,3))
+	logger.log_event('Scoring...')
 
 
 	# -------Storing models-------- #
 	if float(score) > treshold:
 		logger.log_event('Predicting test data...')
-		preds = model.predict(x_test_norm, verbose=1)
-		if autoencode != None:
-			preds = decoder.predict(preds)
-		p_test_binary = (preds > best_anokas).astype(int)
+		p_test = model.predict(x_test_norm, verbose=1)
+
+		if autoencoder != None:
+			p_test = decoder.predict(p_test)
+
+		p_test_binary = (p_test > best_anokas).astype(int)
 
 		logger.log_event('Generating submission file...')
 		fu.log_results(p_test_binary, df_train, df_test, name, logger.ts, score)
