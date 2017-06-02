@@ -71,12 +71,15 @@ def save_planet(logger, name, epochs, size, batch_size, learning_rate,
 
 	# compile the model (should be done *after* setting layers to non-trainable)
 	model.compile(optimizer='adam', loss='binary_crossentropy')
-	callbacks = [EarlyStopping(monitor='val_loss', patience=6, verbose=1)]
+	callbacks = [EarlyStopping(monitor='val_loss', patience=3, verbose=1),
+				ModelCheckpoint('../models/{}_{}.h5'.format(logger.ts, name),
+				 monitor='val_loss', save_best_only=True, verbose=1)]
 
 	class_weights=None
 	history = model.fit(x=x_train, y=y_train, epochs=epochs, verbose=1,
 					batch_size=batch_size, class_weight=class_weights, validation_data=(x_valid, y_valid),
 					callbacks=callbacks)
+
 
 	# --------log time---------#
 	runtime = np.round((time.clock() - logger.start)/60, 2)
@@ -90,9 +93,9 @@ def save_planet(logger, name, epochs, size, batch_size, learning_rate,
 
 	# -------selecting threshold-------- #
 	logger.log_event('Finding best threshold...')
-	best_anokas = fo.find_thresholds(y_train_uncoded, p_train, y_valid_uncoded, p_valid)
+	best_anokas = fo.find_thresholds(y_train, p_train, y_valid, p_valid)
 
-	score =  fbeta_score(y_valid_uncoded, p_valid > best_anokas, beta=2, average='samples')
+	score =  fbeta_score(y_valid, p_valid > best_anokas, beta=2, average='samples')
 	score = str(np.round(score,3))
 	logger.log_event('Scoring...')
 
@@ -123,7 +126,7 @@ def main():
 	parser.add_argument('epochs', type=int, help='number of epochs')
 	parser.add_argument('size', type=int, choices=(255,256), help='image size used for training')
 	parser.add_argument('-m', '--model', type=str, choices=('ResNet50'), default='ResNet50', help='which pretrained model to use')
-	parser.add_argument('-b','--batch_size', type=int, default=20, help='determines batch size')
+	parser.add_argument('-b','--batch_size', type=int, default=30, help='determines batch size')
 	parser.add_argument('-l','--learning_rate', type=float, default=1e-3, help='determines learning rate')
 	parser.add_argument('-t','--treshold', type=float, default=0.9, help='cutoff score for storing models')
 	parser.add_argument('-db','--debug', action="store_true", help='debug mode')
