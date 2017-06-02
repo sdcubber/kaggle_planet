@@ -138,7 +138,7 @@ class SimpleCNN(object):
 	def __init__(self, size, output_size):
 
 		# Input
-		image_input = Input(shape=(int(size),int(size), 4))
+		image_input = Input(shape=(int(size),int(size), 3))
 
 		# Convolutional layer
 		conv_layer = Conv2D(2, (3,3), strides=(2,2), padding='valid', activation='relu')(image_input)
