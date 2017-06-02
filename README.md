@@ -19,7 +19,7 @@ consult the help function `python data_convert.py -h` for all functionalities
 
 to create 32x32 training images of the RGB channel run the following command:
 
-`python data_convert.py ../data/raw/train-jpg ../data/raw/train_labels.csv 32 train_RBG`
+`python data_convert.py ../data/raw/train-jpg ../data/raw/train_labels.csv 32 train_RGB`
 
 to extract NDVI images from the tif training data run:
 
