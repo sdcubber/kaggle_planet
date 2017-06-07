@@ -134,7 +134,7 @@ def planet_GFM(logger, name, epochs, size, batch_size, threshold, debug):
         if debug:
             architecture = m.SimpleCNN(size, output_size=output_size, output='multiclass')
         else:
-            architecture = m.SimpleNet64_2_plus(size, output_size=output_size, output='multiclass')
+            architecture = m.SimpleNet64_2(size, output_size=output_size, output='multiclass')
 
         print(architecture)
         model = Model(inputs=architecture.input, outputs=architecture.output)
