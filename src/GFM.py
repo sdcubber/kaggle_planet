@@ -108,9 +108,9 @@ def planet_GFM(logger, name, epochs, size, batch_size, threshold, debug):
     labels, df_train, df_test, x_train_full, y_train_full, x_test = fu.load_data(size, extra=False)
 
     x_train_full = x_train_full[:1000,:,:,:]
-    x_test_full  = x_test_full[:1000,:,:,:]
-    y_train_full = y_train_full[:1000,:,:,:]
-    
+    x_test  = x_test[:1000,:,:,:]
+    y_train_full = y_train_full[:1000,:]
+
     x_train, x_valid, y_train, y_valid = train_test_split(x_train_full, y_train_full, test_size=0.10)
 
     # Normalize
