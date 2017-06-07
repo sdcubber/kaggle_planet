@@ -28,7 +28,6 @@ from sklearn.metrics import fbeta_score
 from sklearn.preprocessing import OneHotEncoder
 encoder = OneHotEncoder(sparse=False)
 
-from tqdm import tqdm
 
 def matrix_Y(y):
     """Convert binary label matrix to a matrix Y that is suitable to estimate P(y,s):
@@ -70,7 +69,7 @@ def GFM(n_labels, features, predictions, W):
     E_F = []
     optimal_predictions = []
 
-    for instance in tqdm(range(features.shape[0])):
+    for instance in range(features.shape[0]):
         # Construct the matrix P
 
         P = np.ndarray(shape=(n_labels,n_labels))
@@ -122,7 +121,7 @@ def planet_GFM(logger, name, epochs, size, batch_size, threshold, debug):
     predictions_valid = []
     predictions_test = []
     n_labels = 17
-    for i in tqdm(range(n_labels)): # Iterate over the columns of the matrix Y
+    for i in range(n_labels): # Iterate over the columns of the matrix Y
 
         # Do a one-hot encoding of column i
         # fit the encoder on all the labels to make sure that every possible class is encoded
