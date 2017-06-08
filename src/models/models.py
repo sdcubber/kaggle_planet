@@ -579,26 +579,27 @@ class SimpleNet64_joint_GFM(object):
 
         # Concatenate all the outputs
         conv_concatenated = k.layers.concatenate([conv_1_out, conv_2_out, conv_3_out, conv_4_out])
-
+        dense_shared = Dense(100, activation='relu')(conv_concatenated)
+        dense_shared = Dense(100, activation='relu')(dense_shared)
         # Stack 17 multiclass classification problems on top
 
-        multiclass_0 = Dense(field_sizes[0], activation='softmax')(conv_concatenated)
-        multiclass_1 = Dense(field_sizes[1], activation='softmax')(conv_concatenated)
-        multiclass_2 = Dense(field_sizes[2], activation='softmax')(conv_concatenated)
-        multiclass_3 = Dense(field_sizes[3], activation='softmax')(conv_concatenated)
-        multiclass_4 = Dense(field_sizes[4], activation='softmax')(conv_concatenated)
-        multiclass_5 = Dense(field_sizes[5], activation='softmax')(conv_concatenated)
-        multiclass_6 = Dense(field_sizes[6], activation='softmax')(conv_concatenated)
-        multiclass_7 = Dense(field_sizes[7], activation='softmax')(conv_concatenated)
-        multiclass_8 = Dense(field_sizes[8], activation='softmax')(conv_concatenated)
-        multiclass_9 = Dense(field_sizes[9], activation='softmax')(conv_concatenated)
-        multiclass_10 = Dense(field_sizes[10], activation='softmax')(conv_concatenated)
-        multiclass_11 = Dense(field_sizes[11], activation='softmax')(conv_concatenated)
-        multiclass_12 = Dense(field_sizes[12], activation='softmax')(conv_concatenated)
-        multiclass_13 = Dense(field_sizes[13], activation='softmax')(conv_concatenated)
-        multiclass_14 = Dense(field_sizes[14], activation='softmax')(conv_concatenated)
-        multiclass_15 = Dense(field_sizes[15], activation='softmax')(conv_concatenated)
-        multiclass_16 = Dense(field_sizes[16], activation='softmax')(conv_concatenated)
+        multiclass_0 = Dense(field_sizes[0], activation='softmax')(Dense(20, activation='relu')(dense_shared))
+        multiclass_1 = Dense(field_sizes[1], activation='softmax')(Dense(20, activation='relu')(dense_shared))
+        multiclass_2 = Dense(field_sizes[2], activation='softmax')(Dense(20, activation='relu')(dense_shared))
+        multiclass_3 = Dense(field_sizes[3], activation='softmax')(Dense(20, activation='relu')(dense_shared))
+        multiclass_4 = Dense(field_sizes[4], activation='softmax')(Dense(20, activation='relu')(dense_shared))
+        multiclass_5 = Dense(field_sizes[5], activation='softmax')(Dense(20, activation='relu')(dense_shared))
+        multiclass_6 = Dense(field_sizes[6], activation='softmax')(Dense(20, activation='relu')(dense_shared))
+        multiclass_7 = Dense(field_sizes[7], activation='softmax')(Dense(20, activation='relu')(dense_shared))
+        multiclass_8 = Dense(field_sizes[8], activation='softmax')(Dense(20, activation='relu')(dense_shared))
+        multiclass_9 = Dense(field_sizes[9], activation='softmax')(Dense(20, activation='relu')(dense_shared))
+        multiclass_10 = Dense(field_sizes[10], activation='softmax')(Dense(20, activation='relu')(dense_shared))
+        multiclass_11 = Dense(field_sizes[11], activation='softmax')(Dense(20, activation='relu')(dense_shared))
+        multiclass_12 = Dense(field_sizes[12], activation='softmax')(Dense(20, activation='relu')(dense_shared))
+        multiclass_13 = Dense(field_sizes[13], activation='softmax')(Dense(20, activation='relu')(dense_shared))
+        multiclass_14 = Dense(field_sizes[14], activation='softmax')(Dense(20, activation='relu')(dense_shared))
+        multiclass_15 = Dense(field_sizes[15], activation='softmax')(Dense(20, activation='relu')(dense_shared))
+        multiclass_16 = Dense(field_sizes[16], activation='softmax')(Dense(20, activation='relu')(dense_shared))
 
         dense_output = [multiclass_0,
                         multiclass_1,
@@ -620,4 +621,4 @@ class SimpleNet64_joint_GFM(object):
 
 
         self.output = dense_output
-        self.input = image_input  
+        self.input = image_input

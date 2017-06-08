@@ -190,7 +190,11 @@ def planet_GFM(logger, name, epochs, size, method, batch_size, threshold, debug)
             architecture = m.SimpleNet64_joint_GFM(size, field_size)
 
         model = Model(inputs=architecture.input, outputs=architecture.output)
-        model.compile(loss='categorical_crossentropy', optimizer='adam')
+        weights = fu.class_weights(y_train)
+        weigths_inv = [1./w for w in weights.values()] # higher weight for more frequent classes
+
+        print(weigths_inv)
+        model.compile(loss='categorical_crossentropy', optimizer='adam', loss_weights=weigths_inv)
         print(model.summary())
 
         # Generate 17 output vectors for training and validation data
@@ -204,10 +208,10 @@ def planet_GFM(logger, name, epochs, size, method, batch_size, threshold, debug)
             outputs_train.append(Y_train_i)
             outputs_valid.append(Y_valid_i)
 
-            modelpath = '../models/GFM_joint_temp_{}{}.h5'.format(name, logger.ts)
+        modelpath = '../models/GFM_joint_temp_{}{}.h5'.format(name, logger.ts)
 
-            callbacks = [EarlyStopping(monitor='val_loss', patience=3, verbose=1),
-                ModelCheckpoint(modelpath, monitor='val_loss', save_best_only=True, verbose=1)]
+        callbacks = [EarlyStopping(monitor='val_loss', patience=3, verbose=1),
+            ModelCheckpoint(modelpath, monitor='val_loss', save_best_only=True, verbose=1)]
 
         model.fit(x_train_norm, outputs_train, epochs=epochs, verbose=1, callbacks=callbacks,
             batch_size=batch_size, validation_data=(x_valid_norm, outputs_valid))
