@@ -115,56 +115,115 @@ def planet_GFM(logger, name, epochs, size, batch_size, threshold, debug):
     Y_train = matrix_Y(y_train)
     Y_valid = matrix_Y(y_valid)
 
-    # Make predictions required for matrix P
+    if method == 'single':
+        ### Matrix P is construced with 17 independent multinomial classifiers
 
-    predictions_train = []
-    predictions_valid = []
-    predictions_test = []
-    n_labels = 17
-    for i in range(n_labels): # Iterate over the columns of the matrix Y
+        # Make predictions required for matrix P
+        predictions_train_filled = []
+        predictions_valid_filled = []
+        predictions_test_filled = []
+        n_labels = 17
 
-        # Do a one-hot encoding of column i
-        # fit the encoder on all the labels to make sure that every possible class is encoded
-        enc = encoder.fit(np.concatenate((Y_train[:,i], Y_valid[:,i]), axis=0).reshape(-1,1))
-        Y_train_i = enc.transform(Y_train[:,i].reshape(-1, 1))
-        Y_valid_i = enc.transform(Y_valid[:,i].reshape(-1, 1))
-        output_size = Y_train_i.shape[1]
+        for i in range(n_labels): # Iterate over the columns of the matrix Y
 
-        # Multinomial classifier
-        if debug:
-            architecture = m.SimpleCNN(size, output_size=output_size, output='multiclass')
-        else:
-            architecture = m.SimpleNet64_2(size, output_size=output_size, output='multiclass')
+            # Do a one-hot encoding of column i
+            # fit the encoder on all the labels to make sure that every possible class is encoded
+            enc = encoder.fit(np.concatenate((Y_train[:,i], Y_valid[:,i]), axis=0).reshape(-1,1))
+            Y_train_i = enc.transform(Y_train[:,i].reshape(-1, 1))
+            Y_valid_i = enc.transform(Y_valid[:,i].reshape(-1, 1))
+            output_size = Y_train_i.shape[1]
 
-        print(architecture)
+            # Multinomial classifier
+            if debug:
+                architecture = m.SimpleCNN(size, output_size=output_size, output='multiclass')
+            else:
+                architecture = m.SimpleNet64_2(size, output_size=output_size, output='multiclass')
+
+            print(architecture)
+            model = Model(inputs=architecture.input, outputs=architecture.output)
+            model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+
+            modelpath = os.path.join('../models/GFM_single_temp{}{}.h5'.format(name, logger.ts)
+            callbacks = [EarlyStopping(monitor='val_loss', patience=5, verbose=1),
+                ModelCheckpoint(modelpath),
+                monitor='val_loss', save_best_only=True, verbose=1)]
+
+            model.fit(x=x_train_norm, y=Y_train_i, epochs=epochs, verbose=1,
+                batch_size=50, validation_data=(x_valid_norm, Y_valid_i),callbacks=callbacks)
+
+            # Load best model to make predictions
+
+            model.load_weights('../models/GFM_temp_{}{}.h5'.format(name, logger.ts))
+
+            pred_train = model.predict(x_train_norm)
+            pred_train = pred_train[:,1:] # We don't need the probability that y_i is zero!
+            pred_train = complete_pred(pred_train, n_labels)
+            predictions_train_filled.append(pred_train)
+
+            pred_valid = model.predict(x_valid_norm)
+            pred_valid = pred_valid[:,1:] # We don't need the probability that y_i is zero!
+            pred_valid = complete_pred(pred_valid, n_labels)
+            predictions_valid_filled.append(pred_valid)
+
+            pred_test = model.predict(x_test_norm)
+            pred_test = pred_test[:,1:]
+            pred_test = complete_pred(pred_test, n_labels)
+            predictions_test_filled.append(pred_test)
+
+
+    elif method == 'joint':
+        # Matrix P is constructed with 1 big network
+
+        # Determine the sizes of the 17 multinomial output fields
+        n_labels=17
+        field_size = []
+        for i in (range(n_labels)):
+            enc = encoder.fit(np.concatenate((Y_train[:,i], Y_valid[:,i]), axis=0).reshape(-1,1))
+            Y_train_i = enc.transform(Y_train[:,i].reshape(-1, 1))
+            field_size.append(Y_train_i.shape[1])
+            print(field_size)
+
+        architecture = m.SimpleCNN_joint(size, field_size)
         model = Model(inputs=architecture.input, outputs=architecture.output)
-        model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+        model.compile(loss='categorical_crossentropy', optimizer='adam')
+        print(model.summary()
 
+        # Generate 17 output vectors for training and validation data
+        outputs_train = []
+        outputs_valid = []
+
+        for i in range(Y_train.shape[1]):
+            enc = encoder.fit(np.concatenate((Y_train[:,i], Y_valid[:,i]), axis=0).reshape(-1,1))
+            Y_train_i = enc.transform(Y_train[:,i].reshape(-1, 1))
+            Y_valid_i = enc.transform(Y_valid[:,i].reshape(-1, 1))
+            outputs_train.append(Y_train_i)
+            outputs_valid.append(Y_valid_i)
+
+        modelpath = os.path.join('../models/GFM_joint_temp{}{}.h5'.format(name, logger.ts)
         callbacks = [EarlyStopping(monitor='val_loss', patience=5, verbose=1),
-            ModelCheckpoint(os.path.join('../models/GFM_multinomial_temp.h5'),
-            monitor='val_loss', save_best_only=True, verbose=0)]
+            ModelCheckpoint(modelpath),
+            monitor='val_loss', save_best_only=True, verbose=1)]
 
-        model.fit(x=x_train_norm, y=Y_train_i, epochs=epochs, verbose=0,
-            batch_size=50, validation_data=(x_valid_norm, Y_valid_i),callbacks=callbacks)
+        model.fit(x_train_norm, outputs_train, epochs=epochs, verbose=1, callbacks=callbacks,
+            batch_size=batch_size, validation_data=(x_valid_norm, outputs_valid))
 
-        # Load best model to make predictions
+        predictions_valid = model.predict(x_valid_norm, verbose=1)
+        predictions_train = model.predict(x_train_norm, verbose=1)
+        predictions_test = model.predict(x_test_norm, verbose=1)
 
-        model.load_weights('../models/GFM_multinomial_temp.h5')
+    # Fill up the predictions so that they have length 17
+        predictions_train_filled = []
+        predictions_valid_filled = []
+        predictions_test_filled = []
 
-        pred_train = model.predict(x_train_norm)
-        pred_train = pred_train[:,1:] # We don't need the probability that y_i is zero!
-        pred_train = complete_pred(pred_train, n_labels)
-        predictions_train.append(pred_train)
+        for pred in predictions_train:
+            predictions_train_filled.append(complete_pred(pred, 17))
 
-        pred_valid = model.predict(x_valid_norm)
-        pred_valid = pred_valid[:,1:] # We don't need the probability that y_i is zero!
-        pred_valid = complete_pred(pred_valid, n_labels)
-        predictions_valid.append(pred_valid)
+        for pred in predictions_valid:
+            predictions_valid_filled.append(complete_pred(pred, 17))
 
-        pred_test = model.predict(x_test_norm)
-        pred_test = pred_test[:,1:]
-        pred_test = complete_pred(pred_test, n_labels)
-        predictions_test.append(pred_test)
+        for pred in predictions_test:
+            predictions_test_filled.append(complete_pred(pred, 17))
 
     W = matrix_W_F2(beta=2, n_labels=17)
     (optimal_predictions_train, E_F_train) = GFM(17, x_train_norm, predictions_train, W)
@@ -190,6 +249,7 @@ def main():
 	parser.add_argument('name', type=str, help="name of your model")
 	parser.add_argument('epochs', type=int, help="number of epochs")
 	parser.add_argument('size', type=int, choices=(32,64,96,128), help='image size used for training')
+    parser.add_argument('method', type=str, choices=('individual', 'joint'), help='method to use for estimating the P matrix')
 	parser.add_argument('-b','--batch_size', type=int, default=45, help='determines batch size')
 	parser.add_argument('-t','--threshold', type=float, default=0.9, help='cutoff score for storing models')
 	parser.add_argument('-db','--debug', action="store_true", help='debug mode')
