@@ -102,7 +102,7 @@ def GFM(n_labels, features, predictions, W):
 
     return(np.array(optimal_predictions), E_F)
 
-def planet_GFM(logger, name, epochs, size, batch_size, threshold, debug):
+def planet_GFM(logger, name, epochs, size, method, batch_size, threshold, debug):
     # -------load data ---------- #
     labels, df_train, df_test, x_train_full, y_train_full, x_test = fu.load_data(size, extra=False)
 
@@ -115,7 +115,7 @@ def planet_GFM(logger, name, epochs, size, batch_size, threshold, debug):
     Y_train = matrix_Y(y_train)
     Y_valid = matrix_Y(y_valid)
 
-    if method == 'single':
+    if method == 'individual':
         ### Matrix P is construced with 17 independent multinomial classifiers
 
         # Make predictions required for matrix P
@@ -143,17 +143,17 @@ def planet_GFM(logger, name, epochs, size, batch_size, threshold, debug):
             model = Model(inputs=architecture.input, outputs=architecture.output)
             model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
 
-            modelpath = os.path.join('../models/GFM_single_temp{}{}.h5'.format(name, logger.ts)
-            callbacks = [EarlyStopping(monitor='val_loss', patience=5, verbose=1),
-                ModelCheckpoint(modelpath),
-                monitor='val_loss', save_best_only=True, verbose=1)]
+            modelpath = '../models/GFM_single_temp_{}{}.h5'.format(name, logger.ts)
+
+            callbacks = [EarlyStopping(monitor='val_loss', patience=3, verbose=1),
+                ModelCheckpoint(modelpath, monitor='val_loss', save_best_only=True, verbose=1)]
 
             model.fit(x=x_train_norm, y=Y_train_i, epochs=epochs, verbose=1,
                 batch_size=50, validation_data=(x_valid_norm, Y_valid_i),callbacks=callbacks)
 
             # Load best model to make predictions
 
-            model.load_weights('../models/GFM_temp_{}{}.h5'.format(name, logger.ts))
+            model.load_weights(modelpath)
 
             pred_train = model.predict(x_train_norm)
             pred_train = pred_train[:,1:] # We don't need the probability that y_i is zero!
@@ -183,10 +183,15 @@ def planet_GFM(logger, name, epochs, size, batch_size, threshold, debug):
             field_size.append(Y_train_i.shape[1])
             print(field_size)
 
-        architecture = m.SimpleCNN_joint(size, field_size)
+
+        if debug:
+            architecture = m.SimpleCNN_joint_GFM(size, field_size)
+        else:
+            architecture = m.SimpleNet64_joint_GFM(size, field_size)
+
         model = Model(inputs=architecture.input, outputs=architecture.output)
         model.compile(loss='categorical_crossentropy', optimizer='adam')
-        print(model.summary()
+        print(model.summary())
 
         # Generate 17 output vectors for training and validation data
         outputs_train = []
@@ -199,10 +204,10 @@ def planet_GFM(logger, name, epochs, size, batch_size, threshold, debug):
             outputs_train.append(Y_train_i)
             outputs_valid.append(Y_valid_i)
 
-        modelpath = os.path.join('../models/GFM_joint_temp{}{}.h5'.format(name, logger.ts)
-        callbacks = [EarlyStopping(monitor='val_loss', patience=5, verbose=1),
-            ModelCheckpoint(modelpath),
-            monitor='val_loss', save_best_only=True, verbose=1)]
+            modelpath = '../models/GFM_joint_temp_{}{}.h5'.format(name, logger.ts)
+
+            callbacks = [EarlyStopping(monitor='val_loss', patience=3, verbose=1),
+                ModelCheckpoint(modelpath, monitor='val_loss', save_best_only=True, verbose=1)]
 
         model.fit(x_train_norm, outputs_train, epochs=epochs, verbose=1, callbacks=callbacks,
             batch_size=batch_size, validation_data=(x_valid_norm, outputs_valid))
@@ -226,9 +231,9 @@ def planet_GFM(logger, name, epochs, size, batch_size, threshold, debug):
             predictions_test_filled.append(complete_pred(pred, 17))
 
     W = matrix_W_F2(beta=2, n_labels=17)
-    (optimal_predictions_train, E_F_train) = GFM(17, x_train_norm, predictions_train, W)
-    (optimal_predictions_valid, E_F_valid) = GFM(17, x_valid_norm, predictions_valid, W)
-    (optimal_predictions_test, E_F_test) = GFM(17, x_test_norm, predictions_test, W)
+    (optimal_predictions_train, E_F_train) = GFM(17, x_train_norm, predictions_train_filled, W)
+    (optimal_predictions_valid, E_F_valid) = GFM(17, x_valid_norm, predictions_valid_filled, W)
+    (optimal_predictions_test, E_F_test) = GFM(17, x_test_norm, predictions_test_filled, W)
 
     score_GFM_train = fbeta_score(y_train, optimal_predictions_train, beta=2, average='samples')
     print('F_2 score on the training data with multinomial GFM: {}'.format(score_GFM_train))
@@ -245,18 +250,18 @@ def planet_GFM(logger, name, epochs, size, batch_size, threshold, debug):
         logger.log_event('Low score - not storing anything.')
 
 def main():
-	parser = argparse.ArgumentParser(description='GFM algorithm')
-	parser.add_argument('name', type=str, help="name of your model")
-	parser.add_argument('epochs', type=int, help="number of epochs")
-	parser.add_argument('size', type=int, choices=(32,64,96,128), help='image size used for training')
+    parser = argparse.ArgumentParser(description='GFM algorithm')
+    parser.add_argument('name', type=str, help="name of your model")
+    parser.add_argument('epochs', type=int, help="number of epochs")
+    parser.add_argument('size', type=int, choices=(32,64,96,128), help='image size used for training')
     parser.add_argument('method', type=str, choices=('individual', 'joint'), help='method to use for estimating the P matrix')
-	parser.add_argument('-b','--batch_size', type=int, default=45, help='determines batch size')
-	parser.add_argument('-t','--threshold', type=float, default=0.9, help='cutoff score for storing models')
-	parser.add_argument('-db','--debug', action="store_true", help='debug mode')
-	args = parser.parse_args()
-	logger = lu.logger_class(args, time.strftime("%d%m%Y_%H:%M"), time.clock())
+    parser.add_argument('-b','--batch_size', type=int, default=45, help='determines batch size')
+    parser.add_argument('-t','--threshold', type=float, default=0.9, help='cutoff score for storing models')
+    parser.add_argument('-db','--debug', action="store_true", help='debug mode')
+    args = parser.parse_args()
+    logger = lu.logger_class(args, time.strftime("%d%m%Y_%H:%M"), time.clock())
 
-	planet_GFM(logger,**vars(args))
+    planet_GFM(logger,**vars(args))
 
 
 if __name__ == "__main__":

@@ -481,3 +481,143 @@ class SimpleNet_multitask(object):
 		self.output_multiclass = dense_output_multiclass
 		self.output_multilabel = dense_output_multilabel
 		self.input = image_input
+
+class SimpleCNN_joint_GFM(object):
+    ##NOTE: THIS IS STILL UGLY CODE, JUST TO TRY THE CONCEPT
+    def __init__(self, size, field_sizes):
+
+        # Input
+        image_input = Input(shape=(int(size),int(size), 3))
+
+        # Convolutional layer
+        conv_layer = Conv2D(2, (3,3), strides=(2,2), padding='valid', activation='relu')(image_input)
+        conv_layer = MaxPooling2D()(conv_layer)
+        conv_layer = Conv2D(32, (3,3), padding='valid', activation='relu')(conv_layer)
+        conv_layer = MaxPooling2D()(conv_layer)
+
+        # Flatten the output of the convolutional layer
+        conv_output = Flatten()(conv_layer)
+
+        # Stack 17 multiclass classification problems on top
+
+        multiclass_0 = Dense(field_sizes[0], activation='softmax')(conv_output)
+        multiclass_1 = Dense(field_sizes[1], activation='softmax')(conv_output)
+        multiclass_2 = Dense(field_sizes[2], activation='softmax')(conv_output)
+        multiclass_3 = Dense(field_sizes[3], activation='softmax')(conv_output)
+        multiclass_4 = Dense(field_sizes[4], activation='softmax')(conv_output)
+        multiclass_5 = Dense(field_sizes[5], activation='softmax')(conv_output)
+        multiclass_6 = Dense(field_sizes[6], activation='softmax')(conv_output)
+        multiclass_7 = Dense(field_sizes[7], activation='softmax')(conv_output)
+        multiclass_8 = Dense(field_sizes[8], activation='softmax')(conv_output)
+        multiclass_9 = Dense(field_sizes[9], activation='softmax')(conv_output)
+        multiclass_10 = Dense(field_sizes[10], activation='softmax')(conv_output)
+        multiclass_11 = Dense(field_sizes[11], activation='softmax')(conv_output)
+        multiclass_12 = Dense(field_sizes[12], activation='softmax')(conv_output)
+        multiclass_13 = Dense(field_sizes[13], activation='softmax')(conv_output)
+        multiclass_14 = Dense(field_sizes[14], activation='softmax')(conv_output)
+        multiclass_15 = Dense(field_sizes[15], activation='softmax')(conv_output)
+        multiclass_16 = Dense(field_sizes[16], activation='softmax')(conv_output)
+
+        dense_output = [multiclass_0,
+                        multiclass_1,
+                        multiclass_2,
+                        multiclass_3,
+                        multiclass_4,
+                        multiclass_5,
+                        multiclass_6,
+                        multiclass_7,
+                        multiclass_8,
+                        multiclass_9,
+                        multiclass_10,
+                        multiclass_11,
+                        multiclass_12,
+                        multiclass_13,
+                        multiclass_14,
+                        multiclass_15,
+                        multiclass_16]
+
+        self.input = image_input
+        self.output = dense_output
+
+class SimpleNet64_joint_GFM(object):
+    def __init__(self, size, field_sizes):
+
+        # Input
+        image_input = Input(shape=(int(size),int(size), 3))
+
+        # Preprocessing layer
+        conv_0 = Activation('relu')((BatchNormalization(epsilon=0.00001, momentum=0.1)(Conv2D(8, (1,1))(image_input))))
+        conv_0 = Activation('relu')((BatchNormalization(epsilon=0.00001, momentum=0.1)(Conv2D(8, (1,1))(conv_0))))
+        conv_0 = Activation('relu')((BatchNormalization(epsilon=0.00001, momentum=0.1)(Conv2D(8, (1,1))(conv_0))))
+
+        def add_block(self, input, filtersize):
+            conv_ = Activation('relu')(BatchNormalization(epsilon=0.00001, momentum=0.1)(Conv2D(filtersize, (3,3), padding='same')(input)))
+            conv_ = Activation('relu')(BatchNormalization(epsilon=0.00001, momentum=0.1)(Conv2D(filtersize, (1,1))(conv_)))
+            conv_ = Activation('relu')(BatchNormalization(epsilon=0.00001, momentum=0.1)(Conv2D(filtersize, (1,1))(conv_)))
+            conv_ = Activation('relu')(BatchNormalization(epsilon=0.00001, momentum=0.1)(Conv2D(filtersize, (1,1))(conv_)))
+            conv_ = Activation('relu')(BatchNormalization(epsilon=0.00001, momentum=0.1)(Conv2D(filtersize, (3,3), padding='same')(conv_)))
+            output = MaxPooling2D(pool_size=(2, 2), strides=(2,2))(conv_)
+            return(output)
+
+        # Block 1
+        conv_1 = add_block(self, conv_0, 32)
+        conv_1_out = GlobalAveragePooling2D()(conv_1)
+
+        # Block 2
+        conv_2 = add_block(self, conv_1, 32)
+        conv_2_out = GlobalAveragePooling2D()(conv_2)
+
+        # Block 3
+        conv_3 = add_block(self, conv_2, 64)
+        conv_3 = Dropout(0.25)(conv_3)
+        conv_3_out = GlobalAveragePooling2D()(conv_3)
+
+        # Block 4
+        conv_4 = add_block(self, conv_3, 128)
+        conv_4 = Dropout(0.5)(conv_4)
+        conv_4_out = GlobalAveragePooling2D()(conv_4)
+
+        # Concatenate all the outputs
+        conv_concatenated = k.layers.concatenate([conv_1_out, conv_2_out, conv_3_out, conv_4_out])
+
+        # Stack 17 multiclass classification problems on top
+
+        multiclass_0 = Dense(field_sizes[0], activation='softmax')(conv_concatenated)
+        multiclass_1 = Dense(field_sizes[1], activation='softmax')(conv_concatenated)
+        multiclass_2 = Dense(field_sizes[2], activation='softmax')(conv_concatenated)
+        multiclass_3 = Dense(field_sizes[3], activation='softmax')(conv_concatenated)
+        multiclass_4 = Dense(field_sizes[4], activation='softmax')(conv_concatenated)
+        multiclass_5 = Dense(field_sizes[5], activation='softmax')(conv_concatenated)
+        multiclass_6 = Dense(field_sizes[6], activation='softmax')(conv_concatenated)
+        multiclass_7 = Dense(field_sizes[7], activation='softmax')(conv_concatenated)
+        multiclass_8 = Dense(field_sizes[8], activation='softmax')(conv_concatenated)
+        multiclass_9 = Dense(field_sizes[9], activation='softmax')(conv_concatenated)
+        multiclass_10 = Dense(field_sizes[10], activation='softmax')(conv_concatenated)
+        multiclass_11 = Dense(field_sizes[11], activation='softmax')(conv_concatenated)
+        multiclass_12 = Dense(field_sizes[12], activation='softmax')(conv_concatenated)
+        multiclass_13 = Dense(field_sizes[13], activation='softmax')(conv_concatenated)
+        multiclass_14 = Dense(field_sizes[14], activation='softmax')(conv_concatenated)
+        multiclass_15 = Dense(field_sizes[15], activation='softmax')(conv_concatenated)
+        multiclass_16 = Dense(field_sizes[16], activation='softmax')(conv_concatenated)
+
+        dense_output = [multiclass_0,
+                        multiclass_1,
+                        multiclass_2,
+                        multiclass_3,
+                        multiclass_4,
+                        multiclass_5,
+                        multiclass_6,
+                        multiclass_7,
+                        multiclass_8,
+                        multiclass_9,
+                        multiclass_10,
+                        multiclass_11,
+                        multiclass_12,
+                        multiclass_13,
+                        multiclass_14,
+                        multiclass_15,
+                        multiclass_16]
+
+
+        self.output = dense_output
+        self.input = image_input  
