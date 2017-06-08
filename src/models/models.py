@@ -381,7 +381,7 @@ class SimpleNet64_2_plus(object):
 
 
 class SimpleNet64_2(object):
-    def __init__(self, size, output_size, output):
+    def __init__(self, size, output_size, output='multilabel'):
         # Input
         image_input = Input(shape=(int(size),int(size), 3))
 
