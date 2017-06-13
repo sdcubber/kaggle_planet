@@ -195,7 +195,7 @@ def planet_GFM(logger, name, epochs, size, method, batch_size, threshold, debug)
         #weights = [1]*17 # equal weights
         print(weights)
 
-        model.compile(loss='categorical_crossentropy', optimizer='adam', loss_weights=weights)
+        model.compile(loss='categorical_crossentropy', optimizer='adam', loss_weights=weights_inv)
         print(model.summary())
 
         # Generate 17 output vectors for training and validation data
