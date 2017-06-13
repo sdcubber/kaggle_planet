@@ -183,7 +183,6 @@ def planet_GFM(logger, name, epochs, size, method, batch_size, threshold, debug)
             field_size.append(Y_train_i.shape[1])
             print(field_size)
 
-
         if debug:
             architecture = m.SimpleCNN_joint_GFM(size, field_size)
         else:
@@ -191,10 +190,12 @@ def planet_GFM(logger, name, epochs, size, method, batch_size, threshold, debug)
 
         model = Model(inputs=architecture.input, outputs=architecture.output)
         weights = fu.class_weights(y_train)
-        weigths_inv = [1./w for w in weights.values()] # higher weight for more frequent classes
+        weights_inv = [1./w for w in weights.values()] # higher weight for more frequent classes.
+        #weights = [w for w in weights.values()] # higher weights for less frequent classes
+        #weights = [1]*17 # equal weights
+        print(weights)
 
-        print(weigths_inv)
-        model.compile(loss='categorical_crossentropy', optimizer='adam', loss_weights=weigths_inv)
+        model.compile(loss='categorical_crossentropy', optimizer='adam', loss_weights=weights)
         print(model.summary())
 
         # Generate 17 output vectors for training and validation data
@@ -226,13 +227,13 @@ def planet_GFM(logger, name, epochs, size, method, batch_size, threshold, debug)
         predictions_test_filled = []
 
         for pred in predictions_train:
-            predictions_train_filled.append(complete_pred(pred, 17))
+            predictions_train_filled.append(complete_pred(pred[:,1:], 17))
 
         for pred in predictions_valid:
-            predictions_valid_filled.append(complete_pred(pred, 17))
+            predictions_valid_filled.append(complete_pred(pred[:,1:], 17))
 
         for pred in predictions_test:
-            predictions_test_filled.append(complete_pred(pred, 17))
+            predictions_test_filled.append(complete_pred(pred[:,1:], 17))
 
     W = matrix_W_F2(beta=2, n_labels=17)
     (optimal_predictions_train, E_F_train) = GFM(17, x_train_norm, predictions_train_filled, W)
