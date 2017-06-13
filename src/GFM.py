@@ -211,7 +211,7 @@ def planet_GFM(logger, name, epochs, size, method, batch_size, threshold, debug)
 
         modelpath = '../models/GFM_joint_temp_{}{}.h5'.format(name, logger.ts)
 
-        callbacks = [EarlyStopping(monitor='val_loss', patience=3, verbose=1),
+        callbacks = [EarlyStopping(monitor='val_loss', patience=5, verbose=1),
             ModelCheckpoint(modelpath, monitor='val_loss', save_best_only=True, verbose=1)]
 
         model.fit(x_train_norm, outputs_train, epochs=epochs, verbose=1, callbacks=callbacks,
@@ -261,7 +261,7 @@ def main():
     parser.add_argument('size', type=int, choices=(32,64,96,128), help='image size used for training')
     parser.add_argument('method', type=str, choices=('individual', 'joint'), help='method to use for estimating the P matrix')
     parser.add_argument('-b','--batch_size', type=int, default=45, help='determines batch size')
-    parser.add_argument('-t','--threshold', type=float, default=0.9, help='cutoff score for storing models')
+    parser.add_argument('-t','--threshold', type=float, default=0.89, help='cutoff score for storing models')
     parser.add_argument('-db','--debug', action="store_true", help='debug mode')
     args = parser.parse_args()
     logger = lu.logger_class(args, time.strftime("%d%m%Y_%H:%M"), time.clock())
