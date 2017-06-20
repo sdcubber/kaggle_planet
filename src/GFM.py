@@ -102,7 +102,7 @@ def GFM(n_labels, features, predictions, W):
 
     return(np.array(optimal_predictions), E_F)
 
-def planet_GFM(logger, name, epochs, size, method, batch_size, threshold, debug):
+def planet_GFM(logger, name, epochs, size, method, batch_size, threshold, debug, augmentation):
     # -------load data ---------- #
     labels, df_train, df_test, x_train_full, y_train_full, x_test = fu.load_data(size, extra=False)
 
@@ -189,13 +189,13 @@ def planet_GFM(logger, name, epochs, size, method, batch_size, threshold, debug)
             architecture = m.SimpleNet64_joint_GFM(size, field_size)
 
         model = Model(inputs=architecture.input, outputs=architecture.output)
-        weights = fu.class_weights(y_train)
-        weights_inv = [1./w for w in weights.values()] # higher weight for more frequent classes.
+        #weights = fu.class_weights(y_train)
+        #weights_inv = [1./w for w in weights.values()] # higher weight for more frequent classes.
         #weights = [w for w in weights.values()] # higher weights for less frequent classes
-        #weights = [1]*17 # equal weights
+        weights = [1]*17 # equal weights for all classes
         print(weights)
 
-        model.compile(loss='categorical_crossentropy', optimizer='adam', loss_weights=weights_inv)
+        model.compile(loss='categorical_crossentropy', optimizer='adam', loss_weights=weights)
         print(model.summary())
 
         # Generate 17 output vectors for training and validation data
@@ -214,8 +214,20 @@ def planet_GFM(logger, name, epochs, size, method, batch_size, threshold, debug)
         callbacks = [EarlyStopping(monitor='val_loss', patience=5, verbose=1),
             ModelCheckpoint(modelpath, monitor='val_loss', save_best_only=True, verbose=1)]
 
-        model.fit(x_train_norm, outputs_train, epochs=epochs, verbose=1, callbacks=callbacks,
-            batch_size=batch_size, validation_data=(x_valid_norm, outputs_valid))
+        # Add data augmentation
+
+
+        if augmentation:
+            generator = m.DataAugmenter()
+            generator.fit(x_train_norm)
+            # TODO: FIX THIS
+            model.fit_generator(generator.flow(x_train_norm, outputs_train, batch_size=batch_size) ,
+                steps_per_epoch=x_train.shape[0]/batch_size, epochs=epochs, verbose=1,
+                callbacks=callbacks, validation_data=(x_valid_norm, outputs_valid))
+
+        else:
+            model.fit(x_train_norm, outputs_train, epochs=epochs, verbose=1, callbacks=callbacks,
+                    batch_size=batch_size, validation_data=(x_valid_norm, outputs_valid))
 
         predictions_valid = model.predict(x_valid_norm, verbose=1)
         predictions_train = model.predict(x_train_norm, verbose=1)
@@ -260,6 +272,7 @@ def main():
     parser.add_argument('epochs', type=int, help="number of epochs")
     parser.add_argument('size', type=int, choices=(32,64,96,128), help='image size used for training')
     parser.add_argument('method', type=str, choices=('individual', 'joint'), help='method to use for estimating the P matrix')
+    parser.add_argument('-aug', '--augmentation', action='store_true', help='enable data augmentation')
     parser.add_argument('-b','--batch_size', type=int, default=45, help='determines batch size')
     parser.add_argument('-t','--threshold', type=float, default=0.89, help='cutoff score for storing models')
     parser.add_argument('-db','--debug', action="store_true", help='debug mode')
