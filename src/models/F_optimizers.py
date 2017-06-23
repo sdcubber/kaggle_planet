@@ -34,6 +34,93 @@ def find_thresholds(y_train, p_train, y_valid, p_valid):
 
     return(optimized_threshold)
 
+# --- BAC --- #
+
+from sklearn.metrics import fbeta_score
+import numpy as np
+from scipy.optimize import minimize
+import math
+
+
+def f2_score(y_true, y_pred):
+    y_true, y_pred, = np.array(y_true), np.array(y_pred)
+    return fbeta_score(y_true, y_pred, beta=2, average='samples')
+
+
+def cast_thresold(p, x):
+    p2 = np.zeros_like(p)
+    for i in range(17):
+        p2[:, i] = (p[:, i] > x[i]).astype(np.int)
+    return p2
+
+def sigmoid(z, beta):
+    fval = 1.0/(1+np.exp(-beta*z))
+    g = np.array([beta*v*(1-v) for v in fval])
+    return fval, g
+
+def smooth_F_score(label, prob, z):
+    beta, up, down = 1000, 0, 0
+    pred, g = sigmoid(prob-z, beta)
+    for i in range(len(label)):
+        up += 5*label[i]*pred[i]
+    for i in range(len(label)):
+        down += 4*label[i] + pred[i]
+    g = [-(5*down*label[i]*g[i] - up*g[i])/(down*down) for i in range(len(label))]
+    return  up/down, g
+
+def smooth_F2_score(x, labels, probs):
+    score = 0
+    grad = np.zeros(len(x))
+    for i in range(labels.shape[0]):
+        s, g = smooth_F_score(labels[i,:], probs[i,:], x)
+        score += s
+        grad += g
+    grad = -grad/labels.shape[0]
+    score = -score / labels.shape[0]
+    return score, grad
+
+def obj_func(x, labels, probs):
+    s, g = smooth_F2_score(x, labels, probs)
+    return s
+def grad_func(x, labels, probs):
+    s, g = smooth_F2_score(x, labels, probs)
+    return g
+
+def optimize_BAC(y, p, num_tries=100):
+    best_score = -1
+    best_x = np.ones(y.shape[1])*0.2
+    for n_try in range(num_tries):
+        print('Try {} of {}...'.format(n_try, num_tries))
+        #x0 = np.random.rand(p.shape[1],1)
+        x0 = np.random.beta(a=2,b=5,size=17) # Initialize x0 from beta distribution
+        res = minimize(obj_func, x0, args=(y, p), method='BFGS', jac=grad_func, options = {'gtol': 1e-6, 'disp': False})
+        score = f2_score(y, np.array(p > res.x, dtype='uint8'))
+        if score > best_score:
+            best_score = score
+            best_x = res.x
+    print(best_x)
+    return best_x, best_score
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 def optimise_f2_thresholds(y, p, verbose=False, resolution=100):
     """Optimize individual thresholds one by one. Code from anokas.
     Inputs
