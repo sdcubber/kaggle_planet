@@ -84,6 +84,34 @@ def load_data(size, extra):
 			x_test = np.concatenate((x_test, x_test_add),axis=3)
 	return labels, df_train, df_test, x_train, y_train, x_test
 
+def load_metadata(consensus_data=False):
+    """Load just the labels and df_train, df_test without loading any data"""
+    df_train = pd.read_csv("../data/interim/labels.csv")
+    df_test = pd.read_csv("../data/interim/test.csv")
+    df_train_cp = pd.read_csv('../data/interim/labels_cp.csv')
+
+    # Read in data from hdf5 dump
+    if consensus_data:
+        with h5py.File('../data/processed/y_train_cp.h5', 'r') as hf:
+            y_train = hf['y_train_cp'][:]
+    else:
+        with h5py.File('../data/processed/y_train.h5', 'r') as hf:
+            y_train = hf['y_train'][:]
+
+    # list of possible labels
+    flatten = lambda l: [item for sublist in l for item in sublist]
+    labels = sorted(list(set(flatten([l.split(' ') for l in df_train['tags'].values]))))
+
+    # Map labels
+    label_map = {l: i for i, l in enumerate(labels)}
+    inv_label_map = {i: l for l, i in label_map.items()}
+
+    # Define the required mapping of training images names to label arrays
+    # See https://www.kaggle.com/c/planet-understanding-the-amazon-from-space/discussion/34491#192795
+    train_mapping = dict(zip('train/'+df_train_cp.image_name+'.jpg', y_train))
+
+    return labels, df_train, df_test, train_mapping, y_train
+
 def normalize_data(x_train, x_valid, x_test):
 	x_train_mean = np.mean(x_train)
 	x_train_std = np.std(x_train)
