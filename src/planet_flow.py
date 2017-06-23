@@ -38,7 +38,7 @@ import log_utils as lu
 import extended_generator
 
 def save_planet(logger, name, epochs, size, batch_size, learning_rate,
-				treshold, debug=False):
+				treshold, iterations, debug=False):
 
 	# -------load metadata---------- #
 	labels, df_train, df_test, train_mapping, y_train = fu.load_metadata(consensus_data=True)
@@ -87,7 +87,7 @@ def save_planet(logger, name, epochs, size, batch_size, learning_rate,
 	# -------search for best thresholds-------- #
 
 	from sklearn.metrics import fbeta_score
-	best_bac, score = fo.optimize_BAC(y_train, p_train, num_tries=20)
+	best_bac, score = fo.optimize_BAC(y_train, p_train, num_tries=iterations)
 	score = str(np.round(score,3))
 	score_nothresh = fbeta_score(y_train, (p_train > 0.2).astype(int), beta=2, average='samples')
 	print('Score on trainin data without optimization: {}'.format(score_nothresh))
@@ -117,6 +117,7 @@ def main():
 	parser.add_argument('-b','--batch_size', type=int, default=96, help='determines batch size')
 	parser.add_argument('-l','--learning_rate', type=float, default=1e-3, help='determines learning rate')
 	parser.add_argument('-t','--treshold', type=float, default=0.9, help='cutoff score for storing models')
+	parser.add_argument('-it', '--iterations', type=int, default=100, help='n of iterations for optimizing F score')
 	parser.add_argument('-db','--debug', action="store_true", help='determines batch size')
 	args = parser.parse_args()
 	logger = lu.logger_class(args, time.strftime("%d%m%Y_%H:%M"), time.clock())
