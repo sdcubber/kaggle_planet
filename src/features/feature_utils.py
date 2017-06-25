@@ -88,15 +88,6 @@ def load_metadata(consensus_data=False):
     """Load just the labels and df_train, df_test without loading any data"""
     df_train = pd.read_csv("../data/interim/labels.csv")
     df_test = pd.read_csv("../data/interim/test.csv")
-    df_train_cp = pd.read_csv('../data/interim/labels_cp.csv')
-
-    # Read in data from hdf5 dump
-    if consensus_data:
-        with h5py.File('../data/processed/y_train_cp.h5', 'r') as hf:
-            y_train = hf['y_train_cp'][:]
-    else:
-        with h5py.File('../data/processed/y_train.h5', 'r') as hf:
-            y_train = hf['y_train'][:]
 
     # list of possible labels
     flatten = lambda l: [item for sublist in l for item in sublist]
@@ -106,11 +97,42 @@ def load_metadata(consensus_data=False):
     label_map = {l: i for i, l in enumerate(labels)}
     inv_label_map = {i: l for l, i in label_map.items()}
 
-    # Define the required mapping of training images names to label arrays
-    # See https://www.kaggle.com/c/planet-understanding-the-amazon-from-space/discussion/34491#192795
-    train_mapping = dict(zip('train/'+df_train_cp.image_name+'.jpg', y_train))
 
-    return labels, df_train, df_test, train_mapping, y_train
+    # Make df_train and df_validation for the randomly splitted data
+    if consensus_data:
+        train_files = [f.split('.')[0] for f in os.listdir('../data/interim/consensus_train/train/')]
+        val_files = [f.split('.')[0] for f in os.listdir('../data/interim/consensus_validation/validation/')]
+        #This is slow... (30 sec)
+        print('Mapping labels...')
+        train_labels = [df_train[df_train.image_name == train_file].tags.values[0] for train_file in train_files]
+        validation_labels = [df_train[df_train.image_name == val_file].tags.values[0] for val_file in val_files]
+        print('Done.')
+
+        y_train, y_valid = [],[]
+        for tags in train_labels:
+            targets = np.zeros(17)
+            for t in tags.split(' '):
+                targets[label_map[t]] = 1
+            y_train.append(targets)
+
+        for tags in validation_labels:
+            targets = np.zeros(17)
+            for t in tags.split(' '):
+                targets[label_map[t]] = 1
+            y_valid.append(targets)
+
+        # Define the required mapping of training images names to label arrays
+        # See https://www.kaggle.com/c/planet-understanding-the-amazon-from-space/discussion/34491#192795
+        train_mapping = dict(zip(['train/'+t+'.jpg' for t in train_files], y_train))
+        validation_mapping = dict(zip(['validation/'+t+'.jpg' for t in val_files],y_valid))
+
+        return labels, df_train, df_test, label_map,train_mapping, validation_mapping
+
+    else:
+        with h5py.File('../data/processed/y_train.h5', 'r') as hf:
+            y_train = hf['y_train'][:]
+
+        return labels, df_train, df_test, x_train_full, y_train_full, x_test
 
 def normalize_data(x_train, x_valid, x_test):
 	x_train_mean = np.mean(x_train)
@@ -149,12 +171,31 @@ def remap_labels(labels, data, original_labels):
 
 
 def log_results(predictions, df_train, df_test, name, timestamp, score):
-	flatten = lambda l: [item for sublist in l for item in sublist]
-	labels = list(set(flatten([l.split(' ') for l in df_train['tags'].values])))
-	labels = np.array(sorted(labels))
-	print(labels)
-	preds = [' '.join(labels[pred_row == 1]) for pred_row in predictions]
-	results = pd.DataFrame()
-	results['image_name'] = df_test.image_name.values
-	results['tags'] = preds
-	results.to_csv('../logs/predictions/{}_{}_{}.csv'.format(timestamp, name, score), index=False)
+    """Prepare submission file"""
+    flatten = lambda l: [item for sublist in l for item in sublist]
+    labels = list(set(flatten([l.split(' ') for l in df_train['tags'].values])))
+    labels = np.array(sorted(labels))
+    print(labels)
+    preds = [' '.join(labels[pred_row == 1]) for pred_row in predictions]
+    results = pd.DataFrame()
+    results['image_name'] = df_test.image_name.values
+    results['tags'] = preds
+    results.to_csv('../logs/predictions/{}_{}_{}.csv'.format(timestamp, name, score), index=False)
+
+def submission_consensus(predictions_df, df_train, df_test, name, timestamp, score):
+    """Prepare submission file, but overwrite with consensus predictions.
+    ! The predictions from the generator must be remapped to the correct order!"""
+    flatten = lambda l: [item for sublist in l for item in sublist]
+    labels = list(set(flatten([l.split(' ') for l in df_train['tags'].values])))
+    labels = np.array(sorted(labels))
+    print('Converting predictions...')
+    preds = [' '.join(labels[pred_row == 1]) for pred_row in predictions_df['tags'].values]
+    results = pd.DataFrame()
+    results['image_name'] = df_test.image_name.values
+    results['tags'] = preds
+    # Overwrite with consensus predictionss
+    print('Overwriting predictions...')
+    consensus_predictions = pd.read_csv('../data/interim/submission_concensus.csv')
+    results.ix[consensus_predictions.tags!=' ', 'tags'] = 'clear primary'
+    results.to_csv('../logs/predictions/{}_{}_{}with_consensus.csv'.format(timestamp, name, score), index=False)
+    print('Done!')
