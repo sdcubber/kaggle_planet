@@ -262,18 +262,18 @@ class SimpleNet64_2_plus_par(object):
 
 		# Preprocessing layer
 		def preprocessing(self, input, filtersize):
-			conv_0 = Activation('relu')((BatchNormalization(epsilon=0.00001, momentum=0.1)(Conv2D(filtersize, (1,1))(image_input))))
-			conv_0 = Activation('relu')((BatchNormalization(epsilon=0.00001, momentum=0.1)(Conv2D(filtersize, (1,1))(conv_0))))
-			conv_0 = Activation('relu')((BatchNormalization(epsilon=0.00001, momentum=0.1)(Conv2D(filtersize, (1,1))(conv_0))))
+			conv_0 = Activation('relu')((BatchNormalization(epsilon=0.0001, momentum=0.1)(Conv2D(filtersize, (1,1))(image_input))))
+			conv_0 = Activation('relu')((BatchNormalization(epsilon=0.0001, momentum=0.1)(Conv2D(filtersize, (1,1))(conv_0))))
+			conv_0 = Activation('relu')((BatchNormalization(epsilon=0.0001, momentum=0.1)(Conv2D(filtersize, (1,1))(conv_0))))
 
 			return(conv_0)
 
 		def add_block(self, input, filtersize):
-			conv_ = Activation('relu')(BatchNormalization(epsilon=0.00001, momentum=0.1)(Conv2D(filtersize, (3,3), padding='same')(input)))
-			conv_ = Activation('relu')(BatchNormalization(epsilon=0.00001, momentum=0.1)(Conv2D(filtersize, (1,1))(conv_)))
-			conv_ = Activation('relu')(BatchNormalization(epsilon=0.00001, momentum=0.1)(Conv2D(filtersize, (1,1))(conv_)))
-			conv_ = Activation('relu')(BatchNormalization(epsilon=0.00001, momentum=0.1)(Conv2D(filtersize, (1,1))(conv_)))
-			conv_ = Activation('relu')(BatchNormalization(epsilon=0.00001, momentum=0.1)(Conv2D(filtersize, (3,3), padding='same')(conv_)))
+			conv_ = Activation('relu')(BatchNormalization(epsilon=0.0001, momentum=0.1)(Conv2D(filtersize, (3,3), padding='same')(input)))
+			conv_ = Activation('relu')(BatchNormalization(epsilon=0.0001, momentum=0.1)(Conv2D(filtersize, (1,1))(conv_)))
+			conv_ = Activation('relu')(BatchNormalization(epsilon=0.0001, momentum=0.1)(Conv2D(filtersize, (1,1))(conv_)))
+			conv_ = Activation('relu')(BatchNormalization(epsilon=0.0001, momentum=0.1)(Conv2D(filtersize, (1,1))(conv_)))
+			conv_ = Activation('relu')(BatchNormalization(epsilon=0.0001, momentum=0.1)(Conv2D(filtersize, (3,3), padding='same')(conv_)))
 			output = MaxPooling2D(pool_size=(2, 2), strides=(2,2))(conv_)
 			return(output)
 
@@ -323,8 +323,8 @@ class SimpleNet64_2_plus_par(object):
 		conv_concatenated = k.layers.concatenate([conv_1_rgb_out, conv_2_rgb_out, conv_3_rgb_out, conv_4_rgb_out, conv_1_nir_out, conv_2_nir_out, conv_3_nir_out, conv_4_nir_out])
 
 		# Stack Dense layer on top
-		dense = Activation('relu')(BatchNormalization(epsilon=0.00001, momentum=0.1)(Dense(512)(conv_concatenated)))
-		dense = Activation('relu')(BatchNormalization(epsilon=0.00001, momentum=0.1)(Dense(512)(dense)))
+		dense = Activation('relu')(BatchNormalization(epsilon=0.0001, momentum=0.1)(Dense(512)(conv_concatenated)))
+		dense = Activation('relu')(BatchNormalization(epsilon=0.0001, momentum=0.1)(Dense(512)(dense)))
 		dense_output = Dense(output_size, activation='sigmoid')(dense)
 
 		self.output = dense_output
@@ -337,16 +337,16 @@ class SimpleNet64_2_plus(object):
 		image_input = Input(shape=(int(size),int(size), 4))
 
 		# Preprocessing layer
-		conv_0 = Activation('relu')((BatchNormalization(epsilon=0.00001, momentum=0.1)(Conv2D(8, (1,1))(image_input))))
-		conv_0 = Activation('relu')((BatchNormalization(epsilon=0.00001, momentum=0.1)(Conv2D(8, (1,1))(conv_0))))
-		conv_0 = Activation('relu')((BatchNormalization(epsilon=0.00001, momentum=0.1)(Conv2D(8, (1,1))(conv_0))))
+		conv_0 = Activation('relu')((BatchNormalization(epsilon=0.0001, momentum=0.1)(Conv2D(8, (1,1))(image_input))))
+		conv_0 = Activation('relu')((BatchNormalization(epsilon=0.0001, momentum=0.1)(Conv2D(8, (1,1))(conv_0))))
+		conv_0 = Activation('relu')((BatchNormalization(epsilon=0.0001, momentum=0.1)(Conv2D(8, (1,1))(conv_0))))
 
 		def add_block(self, input, filtersize):
-			conv_ = Activation('relu')(BatchNormalization(epsilon=0.00001, momentum=0.1)(Conv2D(filtersize, (3,3), padding='same')(input)))
-			conv_ = Activation('relu')(BatchNormalization(epsilon=0.00001, momentum=0.1)(Conv2D(filtersize, (1,1))(conv_)))
-			conv_ = Activation('relu')(BatchNormalization(epsilon=0.00001, momentum=0.1)(Conv2D(filtersize, (1,1))(conv_)))
-			conv_ = Activation('relu')(BatchNormalization(epsilon=0.00001, momentum=0.1)(Conv2D(filtersize, (1,1))(conv_)))
-			conv_ = Activation('relu')(BatchNormalization(epsilon=0.00001, momentum=0.1)(Conv2D(filtersize, (3,3), padding='same')(conv_)))
+			conv_ = Activation('relu')(BatchNormalization(epsilon=0.0001, momentum=0.1)(Conv2D(filtersize, (3,3), padding='same')(input)))
+			conv_ = Activation('relu')(BatchNormalization(epsilon=0.0001, momentum=0.1)(Conv2D(filtersize, (1,1))(conv_)))
+			conv_ = Activation('relu')(BatchNormalization(epsilon=0.0001, momentum=0.1)(Conv2D(filtersize, (1,1))(conv_)))
+			conv_ = Activation('relu')(BatchNormalization(epsilon=0.0001, momentum=0.1)(Conv2D(filtersize, (1,1))(conv_)))
+			conv_ = Activation('relu')(BatchNormalization(epsilon=0.0001, momentum=0.1)(Conv2D(filtersize, (3,3), padding='same')(conv_)))
 			output = MaxPooling2D(pool_size=(2, 2), strides=(2,2))(conv_)
 			return(output)
 
@@ -372,8 +372,8 @@ class SimpleNet64_2_plus(object):
 		conv_concatenated = k.layers.concatenate([conv_1_out, conv_2_out, conv_3_out, conv_4_out])
 
 		# Stack Dense layer on top
-		dense = Activation('relu')(BatchNormalization(epsilon=0.00001, momentum=0.1)(Dense(512)(conv_concatenated)))
-		dense = Activation('relu')(BatchNormalization(epsilon=0.00001, momentum=0.1)(Dense(512)(dense)))
+		dense = Activation('relu')(BatchNormalization(epsilon=0.0001, momentum=0.1)(Dense(512)(conv_concatenated)))
+		dense = Activation('relu')(BatchNormalization(epsilon=0.0001, momentum=0.1)(Dense(512)(dense)))
 		dense_output = Dense(output_size, activation='sigmoid')(dense)
 
 		self.output = dense_output
@@ -386,16 +386,16 @@ class SimpleNet64_2(object):
         image_input = Input(shape=(int(size),int(size), 3))
 
         # Preprocessing layer
-        conv_0 = Activation('relu')((BatchNormalization(epsilon=0.00001, momentum=0.1)(Conv2D(8, (1,1))(image_input))))
-        conv_0 = Activation('relu')((BatchNormalization(epsilon=0.00001, momentum=0.1)(Conv2D(8, (1,1))(conv_0))))
-        conv_0 = Activation('relu')((BatchNormalization(epsilon=0.00001, momentum=0.1)(Conv2D(8, (1,1))(conv_0))))
+        conv_0 = Activation('relu')((BatchNormalization(epsilon=0.0001, momentum=0.1)(Conv2D(8, (1,1))(image_input))))
+        conv_0 = Activation('relu')((BatchNormalization(epsilon=0.0001, momentum=0.1)(Conv2D(8, (1,1))(conv_0))))
+        conv_0 = Activation('relu')((BatchNormalization(epsilon=0.0001, momentum=0.1)(Conv2D(8, (1,1))(conv_0))))
 
         def add_block(self, input, filtersize):
-            conv_ = Activation('relu')(BatchNormalization(epsilon=0.00001, momentum=0.1)(Conv2D(filtersize, (3,3), padding='same')(input)))
-            conv_ = Activation('relu')(BatchNormalization(epsilon=0.00001, momentum=0.1)(Conv2D(filtersize, (1,1))(conv_)))
-            conv_ = Activation('relu')(BatchNormalization(epsilon=0.00001, momentum=0.1)(Conv2D(filtersize, (1,1))(conv_)))
-            conv_ = Activation('relu')(BatchNormalization(epsilon=0.00001, momentum=0.1)(Conv2D(filtersize, (1,1))(conv_)))
-            conv_ = Activation('relu')(BatchNormalization(epsilon=0.00001, momentum=0.1)(Conv2D(filtersize, (3,3), padding='same')(conv_)))
+            conv_ = Activation('relu')(BatchNormalization(epsilon=0.0001, momentum=0.1)(Conv2D(filtersize, (3,3), padding='same')(input)))
+            conv_ = Activation('relu')(BatchNormalization(epsilon=0.0001, momentum=0.1)(Conv2D(filtersize, (1,1))(conv_)))
+            conv_ = Activation('relu')(BatchNormalization(epsilon=0.0001, momentum=0.1)(Conv2D(filtersize, (1,1))(conv_)))
+            conv_ = Activation('relu')(BatchNormalization(epsilon=0.0001, momentum=0.1)(Conv2D(filtersize, (1,1))(conv_)))
+            conv_ = Activation('relu')(BatchNormalization(epsilon=0.0001, momentum=0.1)(Conv2D(filtersize, (3,3), padding='same')(conv_)))
             output = MaxPooling2D(pool_size=(2, 2), strides=(2,2))(conv_)
             return(output)
 
@@ -421,8 +421,8 @@ class SimpleNet64_2(object):
         conv_concatenated = k.layers.concatenate([conv_1_out, conv_2_out, conv_3_out, conv_4_out])
 
         # Stack Dense layer on top
-        dense = Activation('relu')(BatchNormalization(epsilon=0.00001, momentum=0.1)(Dense(512)(conv_concatenated)))
-        dense = Activation('relu')(BatchNormalization(epsilon=0.00001, momentum=0.1)(Dense(512)(dense)))
+        dense = Activation('relu')(BatchNormalization(epsilon=0.0001, momentum=0.1)(Dense(512)(conv_concatenated)))
+        dense = Activation('relu')(BatchNormalization(epsilon=0.0001, momentum=0.1)(Dense(512)(dense)))
         if output == 'multilabel':
             dense_output = Dense(output_size, activation='sigmoid')(dense)
         if output == 'multiclass':
@@ -438,16 +438,16 @@ class SimpleNet_multitask(object):
 		image_input = Input(shape=(int(size),int(size), 3))
 
 		# Preprocessing layer
-		conv_0 = Activation('relu')((BatchNormalization(epsilon=0.00001, momentum=0.1)(Conv2D(8, (1, 1))(image_input))))
-		conv_0 = Activation('relu')((BatchNormalization(epsilon=0.00001, momentum=0.1)(Conv2D(8, (1,1))(conv_0))))
-		conv_0 = Activation('relu')((BatchNormalization(epsilon=0.00001, momentum=0.1)(Conv2D(8, (1,1))(conv_0))))
+		conv_0 = Activation('relu')((BatchNormalization(epsilon=0.0001, momentum=0.1)(Conv2D(8, (1, 1))(image_input))))
+		conv_0 = Activation('relu')((BatchNormalization(epsilon=0.0001, momentum=0.1)(Conv2D(8, (1,1))(conv_0))))
+		conv_0 = Activation('relu')((BatchNormalization(epsilon=0.0001, momentum=0.1)(Conv2D(8, (1,1))(conv_0))))
 
 		def add_block(self, input, filtersize):
-			conv_ = Activation('relu')(BatchNormalization(epsilon=0.00001, momentum=0.1)(Conv2D(filtersize, (3,3), padding='same')(input)))
-			conv_ = Activation('relu')(BatchNormalization(epsilon=0.00001, momentum=0.1)(Conv2D(filtersize, (1,1))(conv_)))
-			conv_ = Activation('relu')(BatchNormalization(epsilon=0.00001, momentum=0.1)(Conv2D(filtersize, (1,1))(conv_)))
-			conv_ = Activation('relu')(BatchNormalization(epsilon=0.00001, momentum=0.1)(Conv2D(filtersize, (1,1))(conv_)))
-			conv_ = Activation('relu')(BatchNormalization(epsilon=0.00001, momentum=0.1)(Conv2D(filtersize, (3,3), padding='same')(conv_)))
+			conv_ = Activation('relu')(BatchNormalization(epsilon=0.0001, momentum=0.1)(Conv2D(filtersize, (3,3), padding='same')(input)))
+			conv_ = Activation('relu')(BatchNormalization(epsilon=0.0001, momentum=0.1)(Conv2D(filtersize, (1,1))(conv_)))
+			conv_ = Activation('relu')(BatchNormalization(epsilon=0.0001, momentum=0.1)(Conv2D(filtersize, (1,1))(conv_)))
+			conv_ = Activation('relu')(BatchNormalization(epsilon=0.0001, momentum=0.1)(Conv2D(filtersize, (1,1))(conv_)))
+			conv_ = Activation('relu')(BatchNormalization(epsilon=0.0001, momentum=0.1)(Conv2D(filtersize, (3,3), padding='same')(conv_)))
 			output = MaxPooling2D(pool_size=(2, 2), strides=(2,2))(conv_)
 			return(output)
 
@@ -473,8 +473,8 @@ class SimpleNet_multitask(object):
 		conv_concatenated = k.layers.concatenate([conv_1_out, conv_2_out, conv_3_out, conv_4_out])
 
 		# Stack Dense layer on top
-		dense = Activation('relu')(BatchNormalization(epsilon=0.00001, momentum=0.1)(Dense(512)(conv_concatenated)))
-		dense = Activation('relu')(BatchNormalization(epsilon=0.00001, momentum=0.1)(Dense(512)(dense)))
+		dense = Activation('relu')(BatchNormalization(epsilon=0.0001, momentum=0.1)(Dense(512)(conv_concatenated)))
+		dense = Activation('relu')(BatchNormalization(epsilon=0.0001, momentum=0.1)(Dense(512)(dense)))
 		dense_output_multiclass = Dense(output_size_multiclass, activation='softmax')(dense)
 		dense_output_multilabel  = Dense(output_size_multilabel, activation='sigmoid')(dense)
 
@@ -546,16 +546,16 @@ class SimpleNet64_joint_GFM(object):
         image_input = Input(shape=(int(size),int(size), 3))
 
         # Preprocessing layer
-        conv_0 = Activation('relu')((BatchNormalization(epsilon=0.00001, momentum=0.1)(Conv2D(8, (1,1))(image_input))))
-        conv_0 = Activation('relu')((BatchNormalization(epsilon=0.00001, momentum=0.1)(Conv2D(8, (1,1))(conv_0))))
-        conv_0 = Activation('relu')((BatchNormalization(epsilon=0.00001, momentum=0.1)(Conv2D(8, (1,1))(conv_0))))
+        conv_0 = Activation('relu')((BatchNormalization(epsilon=0.0001, momentum=0.1)(Conv2D(8, (1,1))(image_input))))
+        conv_0 = Activation('relu')((BatchNormalization(epsilon=0.0001, momentum=0.1)(Conv2D(8, (1,1))(conv_0))))
+        conv_0 = Activation('relu')((BatchNormalization(epsilon=0.0001, momentum=0.1)(Conv2D(8, (1,1))(conv_0))))
 
         def add_block(self, input, filtersize):
-            conv_ = Activation('relu')(BatchNormalization(epsilon=0.00001, momentum=0.1)(Conv2D(filtersize, (3,3), padding='same')(input)))
-            conv_ = Activation('relu')(BatchNormalization(epsilon=0.00001, momentum=0.1)(Conv2D(filtersize, (1,1))(conv_)))
-            conv_ = Activation('relu')(BatchNormalization(epsilon=0.00001, momentum=0.1)(Conv2D(filtersize, (1,1))(conv_)))
-            conv_ = Activation('relu')(BatchNormalization(epsilon=0.00001, momentum=0.1)(Conv2D(filtersize, (1,1))(conv_)))
-            conv_ = Activation('relu')(BatchNormalization(epsilon=0.00001, momentum=0.1)(Conv2D(filtersize, (3,3), padding='same')(conv_)))
+            conv_ = Activation('relu')(BatchNormalization(epsilon=0.0001, momentum=0.1)(Conv2D(filtersize, (3,3), padding='same')(input)))
+            conv_ = Activation('relu')(BatchNormalization(epsilon=0.0001, momentum=0.1)(Conv2D(filtersize, (1,1))(conv_)))
+            conv_ = Activation('relu')(BatchNormalization(epsilon=0.0001, momentum=0.1)(Conv2D(filtersize, (1,1))(conv_)))
+            conv_ = Activation('relu')(BatchNormalization(epsilon=0.0001, momentum=0.1)(Conv2D(filtersize, (1,1))(conv_)))
+            conv_ = Activation('relu')(BatchNormalization(epsilon=0.0001, momentum=0.1)(Conv2D(filtersize, (3,3), padding='same')(conv_)))
             output = MaxPooling2D(pool_size=(2, 2), strides=(2,2))(conv_)
             return(output)
 
