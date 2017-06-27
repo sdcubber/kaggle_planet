@@ -26,8 +26,6 @@ from keras.preprocessing.image import ImageDataGenerator
 from keras.layers.advanced_activations import PReLU
 #--------------#
 
-
-
 def class_weights(y_train, mu=0.50):
     """Compute smooth class weights for imbalanced data
     Based on https://datascience.stackexchange.com/questions/13490/how-to-set-class-weights-for-imbalanced-classes-in-keras/16467
@@ -84,6 +82,17 @@ def load_data(size, extra):
 			x_test = np.concatenate((x_test, x_test_add),axis=3)
 	return labels, df_train, df_test, x_train, y_train, x_test
 
+def binarize(labels, label_map):
+    """Binarize text labels to (None, 17) binary array"""
+    y_bin = []
+    for tags in labels:
+        targets = np.zeros(17)
+        for t in tags.split(' '):
+            targets[label_map[t]] = 1
+        y_bin.append(targets)
+    return(np.array(y_bin))
+
+
 def load_metadata(consensus_data=False):
     """Load just the labels and df_train, df_test without loading any data"""
     df_train = pd.read_csv("../data/interim/labels.csv")
@@ -97,36 +106,27 @@ def load_metadata(consensus_data=False):
     label_map = {l: i for i, l in enumerate(labels)}
     inv_label_map = {i: l for l, i in label_map.items()}
 
-
     # Make df_train and df_validation for the randomly splitted data
     if consensus_data:
         train_files = [f.split('.')[0] for f in os.listdir('../data/interim/consensus_train/train/')]
         val_files = [f.split('.')[0] for f in os.listdir('../data/interim/consensus_validation/validation/')]
         #This is slow... (30 sec)
         print('Mapping labels...')
-        train_labels = [df_train[df_train.image_name == train_file].tags.values[0] for train_file in train_files]
-        validation_labels = [df_train[df_train.image_name == val_file].tags.values[0] for val_file in val_files]
+        print('New approach')
+        # Three times faster with np.where and iloc compared to boolean mask list!!!
+        train_labels = [df_train.iloc[np.where(df_train.image_name.values == train_file)].tags.values[0] for train_file in train_files]
+        validation_labels = [df_train.iloc[np.where(df_train.image_name.values == val_file)].tags.values[0] for val_file in val_files]
         print('Done.')
 
-        y_train, y_valid = [],[]
-        for tags in train_labels:
-            targets = np.zeros(17)
-            for t in tags.split(' '):
-                targets[label_map[t]] = 1
-            y_train.append(targets)
-
-        for tags in validation_labels:
-            targets = np.zeros(17)
-            for t in tags.split(' '):
-                targets[label_map[t]] = 1
-            y_valid.append(targets)
+        y_train = binarize(train_labels, label_map)
+        y_valid = binarize(train_labels, label_map)
 
         # Define the required mapping of training images names to label arrays
         # See https://www.kaggle.com/c/planet-understanding-the-amazon-from-space/discussion/34491#192795
         train_mapping = dict(zip(['train/'+t+'.jpg' for t in train_files], y_train))
         validation_mapping = dict(zip(['validation/'+t+'.jpg' for t in val_files],y_valid))
 
-        return labels, df_train, df_test, label_map,train_mapping, validation_mapping
+        return labels, df_train, df_test, label_map,train_mapping, validation_mapping, y_train, y_valid
 
     else:
         with h5py.File('../data/processed/y_train.h5', 'r') as hf:
