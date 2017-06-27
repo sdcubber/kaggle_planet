@@ -64,7 +64,7 @@ import extended_generator
 
 
 def save_planet(logger, name, epochs, size, batch_size, learning_rate,
-    treshold, iterations, TTA, debug=False):
+    treshold, iterations, TTA, optimizer, debug=False):
 
     ts = logger.ts
 
@@ -113,14 +113,17 @@ def save_planet(logger, name, epochs, size, batch_size, learning_rate,
         architecture = m.SimpleNet64_2(size, output_size=17)
 
     model = Model(inputs=architecture.input, outputs=architecture.output)
-    optimizer = Adam()
 
     def lr_schedule(epoch):
         """Learning rate scheduler"""
         return learning_rate * (0.1 ** int(epoch / 10))
 
-    sgd = SGD(lr=learning_rate, decay=1e-6, momentum=0.9, nesterov=True)
-    model.compile(loss='binary_crossentropy', optimizer=sgd, metrics=['accuracy'])
+    if optimizer == 'adam':
+        optimizer = Adam()
+    elif optimizer == 'sgd':
+        optimizer = SGD(lr=learning_rate, decay=1e-6, momentum=0.9, nesterov=True)
+
+    model.compile(loss='binary_crossentropy', optimizer=optimizer, metrics=['accuracy'])
 
     callbacks = [EarlyStopping(monitor='val_loss', patience=4, verbose=1),
     ModelCheckpoint('../models/{}_{}.h5'.format(logger.ts, name),
@@ -135,7 +138,7 @@ def save_planet(logger, name, epochs, size, batch_size, learning_rate,
 
     # Load best model
     model.load_weights('../models/{}_{}.h5'.format(logger.ts, name))
-    model.compile(loss='binary_crossentropy', optimizer=sgd, metrics=['accuracy'])
+    model.compile(loss='binary_crossentropy', optimizer=optimizer, metrics=['accuracy'])
 
     # --------move back validation data--------- #
     du.empty_validation_folder(temp_training_dir, temp_validation_dir)
@@ -154,11 +157,10 @@ def save_planet(logger, name, epochs, size, batch_size, learning_rate,
         class_mode=None, batch_size=batch_size, shuffle=False)
 
     # Finetune model on full data with 100x smaller lr for 5 epochs
-    
-    sgd = SGD(lr=learning_rate/100, decay=1e-6, momentum=0.9, nesterov=True)
-    model.compile(loss='binary_crossentropy', optimizer=sgd, metrics=['accuracy'])
-    model.fit_generator(generator=training_generator, steps_per_epoch=n_train_files/batch_size,epochs=5, verbose=1)
-    model.save('../models/{}_{}_finetuned.h5'.format(logger.ts, name))
+
+    #model.compile(loss='binary_crossentropy', optimizer=Adam(lr=0.0001, decay=0.5), metrics=['accuracy'])
+    #model.fit_generator(generator=training_generator, steps_per_epoch=n_train_files/batch_size,epochs=5, verbose=1)
+    #model.save('../models/{}_{}_finetuned.h5'.format(logger.ts, name))
 
     # -------Search for best thresholds-------- #
     # Predict full training data. With TTA to make predictions stable!
@@ -225,6 +227,7 @@ def main():
     parser.add_argument('-it', '--iterations', type=int, default=100, help='n of iterations for optimizing F score ')
     parser.add_argument('-db','--debug', action="store_true", help='determines batch size')
     parser.add_argument('-tta', '--TTA', type=int, default=10, help='number of TTA loops')
+    parser.add_argument('-op', '--optimizer', type=str, default='adam', choices=('adam', 'sgd'), help='Optimizer')
     args = parser.parse_args()
     logger = lu.logger_class(args, time.strftime("%d%m%Y_%H:%M"), time.clock())
 
