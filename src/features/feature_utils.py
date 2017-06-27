@@ -112,7 +112,6 @@ def load_metadata(consensus_data=False):
         val_files = [f.split('.')[0] for f in os.listdir('../data/interim/consensus_validation/validation/')]
         #This is slow... (30 sec)
         print('Mapping labels...')
-        print('New approach')
         # Three times faster with np.where and iloc compared to boolean mask list!!!
         train_labels = [df_train.iloc[np.where(df_train.image_name.values == train_file)].tags.values[0] for train_file in train_files]
         validation_labels = [df_train.iloc[np.where(df_train.image_name.values == val_file)].tags.values[0] for val_file in val_files]
