@@ -6,9 +6,10 @@
 # TODO: #
 #########
 
-# - install pillow on GPU cluster
-# - verify that planet_flow works on HPC ugent
-# - verify that it works on GPU kul
+# - copy training/validation folders to a remote location first!!
+# - Otherwise you can only run one script at a time on the cluster...
+# - no: just do it with training/validation mappings? -> nope, they have to be in a different folder
+# - how are images read in? 8 bit integers or 64 bit floats?
 # - implement GFM (will require a lot of mapping - remapping)
 # - Go over GFM algo to verify its correctness
 # - Put everything on top of VGGnet (according to the keras tutorial -> fix the mapping once?)
@@ -132,10 +133,8 @@ def save_planet(logger, name, epochs, size, batch_size, learning_rate,
      LearningRateScheduler(lr_schedule)]
 
     # --------training model--------- #
-    # Load previous weights
-    if not debug:
-        model.load_weights('../models/26062017_15:59_simplenet_64.h5')
-
+    # Load previous weights?
+    
     history = model.fit_generator(generator=training_generator, steps_per_epoch=n_train_files/batch_size,epochs=epochs, verbose=1,
     callbacks=callbacks, validation_data=(validation_generator), validation_steps=n_validation_files/batch_size)
 
