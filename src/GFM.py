@@ -50,7 +50,7 @@ def matrix_W_F2(beta, n_labels):
             W[i-1, j-1] = 1/(i*(beta**2) + j)
     return(W)
 
-def GFM(n_labels, features, predictions, W):
+def GFM(n_labels, n_instances, predictions, W):
     """GFM algorithm. Implementation according to [1], page 3528.
 
     Inputs
@@ -69,7 +69,7 @@ def GFM(n_labels, features, predictions, W):
     E_F = []
     optimal_predictions = []
 
-    for instance in range(features.shape[0]):
+    for instance in range(n_instances):
         # Construct the matrix P
 
         P = np.ndarray(shape=(n_labels,n_labels))
