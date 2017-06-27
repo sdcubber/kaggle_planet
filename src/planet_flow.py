@@ -8,12 +8,15 @@
 
 
 # - install pillow on GPU cluster
-# - implement GFM
-# - Go over GFM algo to verify it's correctness
-# - Put everything on top of VGGnet
-# - (learning rate scheduler (useful with Adam?)
+# - verify that planet_flow works on HPC ugent
+# - verify that it works on GPU kul
+# - implement GFM (will require a lot of mapping - remapping)
+# - Go over GFM algo to verify its correctness
+# - Put everything on top of VGGnet (according to the keras tutorial -> fix the mapping once?)
 # - (proper scaling of inputs? (does this matter?))
-# - (try to implement flow_from_h5py...)
+# - (try to implement flow_from_h5py... maybe for later. When using flow_from...,
+# One cpu is reserved anyway to do the loading and the preprocessing so the amount of
+# overhead here is maybe not THAT important)
 
 import os
 import sys
@@ -37,9 +40,6 @@ import models.models as m
 import models.F_optimizers as fo
 import plots.plot_utils as pu
 import log_utils as lu
-
-# Import GFM for the GFM algorithm utility functions
-import GFM as GFM
 
 # Import extended datagenerator
 # Source: https://gist.github.com/jandremarais/6bf673c76203f612f5ab2981430eb2ef
