@@ -6,7 +6,6 @@
 # TODO: #
 #########
 
-
 # - install pillow on GPU cluster
 # - verify that planet_flow works on HPC ugent
 # - verify that it works on GPU kul
@@ -15,8 +14,8 @@
 # - Put everything on top of VGGnet (according to the keras tutorial -> fix the mapping once?)
 # - (proper scaling of inputs? (does this matter?))
 # - (try to implement flow_from_h5py... maybe for later. When using flow_from...,
-# One cpu is reserved anyway to do the loading and the preprocessing so the amount of
-# overhead here is maybe not THAT important)
+#   One cpu is reserved anyway to do the loading and the preprocessing so the amount of
+#   overhead here is maybe not THAT important)
 
 import os
 import sys
@@ -78,7 +77,7 @@ def save_planet(logger, name, epochs, size, batch_size, learning_rate,
     move_to_validation_folder()
 
     # -------load metadata---------- #
-    labels, df_train, df_test, label_map, train_mapping, validation_mapping = fu.load_metadata(consensus_data=True)
+    labels, df_train, df_test, label_map, train_mapping, validation_mapping, y_train, y_valid = fu.load_metadata(consensus_data=True)
 
     # ------ call data generators ------#
     train_directory = '../data/interim/consensus_train/'
@@ -149,14 +148,9 @@ def save_planet(logger, name, epochs, size, batch_size, learning_rate,
 
     print('Remapping labels...')
     train_files = [f.split('.')[0] for f in os.listdir('../data/interim/consensus_train/train/')]
-    train_labels = [df_train[df_train.image_name == train_file].tags.values[0] for train_file in train_files]
-    y_train = []
-    for tags in train_labels:
-        targets = np.zeros(17)
-        for t in tags.split(' '):
-            targets[label_map[t]] = 1
-        y_train.append(targets)
-    y_train=np.array(y_train)
+    train_labels = [df_train.iloc[np.where(df_train.image_name.values == train_file)].tags.values[0] for train_file in train_files]
+
+    y_train = fu.binarize(train_labels, label_map)
     print('Done.')
 
     n_train_files = len(os.listdir(os.path.join(train_directory, 'train/')))
