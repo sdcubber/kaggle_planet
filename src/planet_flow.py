@@ -6,13 +6,21 @@
 # TODO: #
 #########
 
+# 1.
 # - copy training/validation folders to a remote location first!!
 # - Otherwise you can only run one script at a time on the cluster...
 # - no: just do it with training/validation mappings? -> nope, they have to be in a different folder
-# - how are images read in? 8 bit integers or 64 bit floats?
+
+# 2.
+# - how are images read in? 8 bit integers or 64 bit floats? don't care if it doesnt give memory errors on the cluster
+
+# 3.
 # - implement GFM (will require a lot of mapping - remapping)
 # - Go over GFM algo to verify its correctness
+
+# 4.
 # - Put everything on top of VGGnet (according to the keras tutorial -> fix the mapping once?)
+
 # - (proper scaling of inputs? (does this matter?))
 # - (try to implement flow_from_h5py... maybe for later. When using flow_from...,
 #   One cpu is reserved anyway to do the loading and the preprocessing so the amount of
@@ -40,6 +48,7 @@ import models.models as m
 import models.F_optimizers as fo
 import plots.plot_utils as pu
 import log_utils as lu
+import dir_utils as du
 
 # Import extended datagenerator
 # Source: https://gist.github.com/jandremarais/6bf673c76203f612f5ab2981430eb2ef
@@ -51,39 +60,23 @@ import log_utils as lu
 
 import extended_generator
 
-def move_to_validation_folder():
-    """Randomly move 10% of the training images to the validation folder. """
-    n_train = len(os.listdir('../data/interim/consensus_train/train'))
-    validation_images = np.random.choice(os.listdir('../data/interim/consensus_train/train'),size=int(n_train/10),replace=False)
-
-    for f in os.listdir('../data/interim/consensus_train/train'):
-        if f in validation_images:
-            shutil.move(src='../data/interim/consensus_train/train/{}'.format(f),
-            dst='../data/interim/consensus_validation/validation/{}'.format(f))
-        else:
-            continue
-
-def empty_validation_folder():
-    """Move all the images in the validation folder to the training folder."""
-    for f in os.listdir('../data/interim/consensus_validation/validation'):
-        shutil.move(src='../data/interim/consensus_validation/validation/{}'.format(f),
-                    dst='../data/interim/consensus_train/train/{}'.format(f))
-
 
 def save_planet(logger, name, epochs, size, batch_size, learning_rate,
     treshold, iterations, TTA, debug=False):
 
-    # Make sure that the validation folder is empty first, then move 10% of training data to validation folder
-    empty_validation_folder()
-    move_to_validation_folder()
+    ts = logger.ts
 
-    # -------load metadata---------- #
-    labels, df_train, df_test, label_map, train_mapping, validation_mapping, y_train, y_valid = fu.load_metadata(consensus_data=True)
+    temp_training_dir, temp_validation_dir = du.make_temp_dirs(ts, name)
+    du.fill_temp_training_folder(temp_training_dir)
+    du.move_to_validation_folder(temp_training_dir, temp_validation_dir)
 
     # ------ call data generators ------#
-    train_directory = '../data/interim/consensus_train/'
-    validation_directory = '../data/interim/consensus_validation/'
+    train_directory = os.path.split(temp_training_dir)[0]
+    validation_directory = os.path.split(temp_validation_dir)[0]
     test_directory = '../data/interim/consensus_test/'
+
+    # -------load metadata---------- #
+    labels, df_train, df_test, label_map, train_mapping, validation_mapping, y_train, y_valid = fu.load_metadata(temp_training_dir, temp_validation_dir)
 
     n_train_files = len(os.listdir(os.path.join(train_directory, 'train')))
     n_validation_files = len(os.listdir(os.path.join(validation_directory, 'validation')))
@@ -134,7 +127,7 @@ def save_planet(logger, name, epochs, size, batch_size, learning_rate,
 
     # --------training model--------- #
     # Load previous weights?
-    
+
     history = model.fit_generator(generator=training_generator, steps_per_epoch=n_train_files/batch_size,epochs=epochs, verbose=1,
     callbacks=callbacks, validation_data=(validation_generator), validation_steps=n_validation_files/batch_size)
 
@@ -143,16 +136,16 @@ def save_planet(logger, name, epochs, size, batch_size, learning_rate,
     model.compile(loss='binary_crossentropy', optimizer='adam')
 
     # --------move back validation data--------- #
-    empty_validation_folder()
+    du.empty_validation_folder(temp_training_dir, temp_validation_dir)
 
     print('Remapping labels...')
-    train_files = [f.split('.')[0] for f in os.listdir('../data/interim/consensus_train/train/')]
+    train_files = [f.split('.')[0] for f in os.listdir(temp_training_dir)]
     train_labels = [df_train.iloc[np.where(df_train.image_name.values == train_file)].tags.values[0] for train_file in train_files]
 
     y_train = fu.binarize(train_labels, label_map)
     print('Done.')
 
-    n_train_files = len(os.listdir(os.path.join(train_directory, 'train/')))
+    n_train_files = len(os.listdir(temp_training_dir    ))
 
     # Call the training TTA generator here
     training_generator_TTA = gen_augmentation.flow_from_directory(train_directory, target_size=(size,size),
@@ -207,6 +200,10 @@ def save_planet(logger, name, epochs, size, batch_size, learning_rate,
                 logger.log_event('Done!')
     else:
         logger.log_event('Low score - not storing anything.')
+
+
+    # Remove temp folders
+    du.remove_temp_dirs(ts, name)
 
 def main():
     parser = argparse.ArgumentParser(description='Neural network to gain money')

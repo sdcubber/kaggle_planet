@@ -93,7 +93,7 @@ def binarize(labels, label_map):
     return(np.array(y_bin))
 
 
-def load_metadata(consensus_data=False):
+def load_metadata(temp_training_dir, temp_validation_dir,consensus_data=True):
     """Load just the labels and df_train, df_test without loading any data"""
     df_train = pd.read_csv("../data/interim/labels.csv")
     df_test = pd.read_csv("../data/interim/test.csv")
@@ -108,8 +108,8 @@ def load_metadata(consensus_data=False):
 
     # Make df_train and df_validation for the randomly splitted data
     if consensus_data:
-        train_files = [f.split('.')[0] for f in os.listdir('../data/interim/consensus_train/train/')]
-        val_files = [f.split('.')[0] for f in os.listdir('../data/interim/consensus_validation/validation/')]
+        train_files = [f.split('.')[0] for f in os.listdir(temp_training_dir)]
+        val_files = [f.split('.')[0] for f in os.listdir(temp_validation_dir)]
         #This is slow... (30 sec)
         print('Mapping labels...')
         # Three times faster with np.where and iloc compared to boolean mask list!!!
