@@ -118,7 +118,7 @@ def load_metadata(temp_training_dir, temp_validation_dir,consensus_data=True):
         print('Done.')
 
         y_train = binarize(train_labels, label_map)
-        y_valid = binarize(train_labels, label_map)
+        y_valid = binarize(validation_labels, label_map)
 
         # Define the required mapping of training images names to label arrays
         # See https://www.kaggle.com/c/planet-understanding-the-amazon-from-space/discussion/34491#192795

@@ -6,21 +6,23 @@
 # TODO: #
 #########
 
-# 1.
-# - copy training/validation folders to a remote location first!!
-# - Otherwise you can only run one script at a time on the cluster...
-# - no: just do it with training/validation mappings? -> nope, they have to be in a different folder
-
-# 2.
-# - how are images read in? 8 bit integers or 64 bit floats? don't care if it doesnt give memory errors on the cluster
-
-# 3.
+# .
 # - implement GFM (will require a lot of mapping - remapping)
 # - Go over GFM algo to verify its correctness
 
-# 4.
+# .
+# Implement training on the full data set after determining the amount of epochs
+# To do this cheaply, swap validation data after initial training,
+# Then finetune with the final weights from training session as initial weights
+# OR: Initialize with final weights and just train on full data for some more epochs (this is EZ)
+
+# .
 # - Put everything on top of VGGnet (according to the keras tutorial -> fix the mapping once?)
 
+# .
+# - how are images read in? 8 bit integers or 64 bit floats? don't care if it doesnt give memory errors on the cluster
+
+# .
 # - (proper scaling of inputs? (does this matter?))
 # - (try to implement flow_from_h5py... maybe for later. When using flow_from...,
 #   One cpu is reserved anyway to do the loading and the preprocessing so the amount of
@@ -133,7 +135,7 @@ def save_planet(logger, name, epochs, size, batch_size, learning_rate,
 
     # Load best model
     model.load_weights('../models/{}_{}.h5'.format(logger.ts, name))
-    model.compile(loss='binary_crossentropy', optimizer='adam')
+    model.compile(loss='binary_crossentropy', optimizer=sgd, metrics=['accuracy'])
 
     # --------move back validation data--------- #
     du.empty_validation_folder(temp_training_dir, temp_validation_dir)
@@ -150,6 +152,13 @@ def save_planet(logger, name, epochs, size, batch_size, learning_rate,
     # Call the training TTA generator here
     training_generator_TTA = gen_augmentation.flow_from_directory(train_directory, target_size=(size,size),
         class_mode=None, batch_size=batch_size, shuffle=False)
+
+    # Finetune model on full data with 100x smaller lr for 5 epochs
+    
+    sgd = SGD(lr=learning_rate/100, decay=1e-6, momentum=0.9, nesterov=True)
+    model.compile(loss='binary_crossentropy', optimizer=sgd, metrics=['accuracy'])
+    model.fit_generator(generator=training_generator, steps_per_epoch=n_train_files/batch_size,epochs=5, verbose=1)
+    model.save('../models/{}_{}_finetuned.h5'.format(logger.ts, name))
 
     # -------Search for best thresholds-------- #
     # Predict full training data. With TTA to make predictions stable!
