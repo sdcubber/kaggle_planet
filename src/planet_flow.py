@@ -7,6 +7,9 @@
 #########
 
 # .
+# log wall time for the scripts (and time/epoch) to compare GPU/CPU
+
+# .
 # - implement GFM (will require a lot of mapping - remapping)
 # - Go over GFM algo to verify its correctness
 
@@ -101,10 +104,6 @@ def save_planet(logger, name, epochs, size, batch_size, learning_rate,
     # This one has to be calles AFTER the validation data has been moved back!
     # Otherwise it doesn't know the correct amount of images.
 
-    # Test data: with TTA - no labels
-    test_generator = gen_augmentation.flow_from_directory(test_directory, target_size=(size, size),
-     class_mode=None, batch_size=batch_size, shuffle=False)
-
     # --------load model--------- #
     logger.log_event("Initializing model...")
     if debug:
@@ -150,11 +149,7 @@ def save_planet(logger, name, epochs, size, batch_size, learning_rate,
     y_train = fu.binarize(train_labels, label_map)
     print('Done.')
 
-    n_train_files = len(os.listdir(temp_training_dir    ))
-
-    # Call the training TTA generator here
-    training_generator_TTA = gen_augmentation.flow_from_directory(train_directory, target_size=(size,size),
-        class_mode=None, batch_size=batch_size, shuffle=False)
+    n_train_files = len(os.listdir(temp_training_dir))
 
     # Finetune model on full data with 100x smaller lr for 5 epochs
 
@@ -167,11 +162,15 @@ def save_planet(logger, name, epochs, size, batch_size, learning_rate,
     print('TTA ({} loops)...'.format(TTA))
     predictions_train = []
     for i in range(TTA):
+        training_generator_TTA = gen_augmentation.flow_from_directory(train_directory, target_size=(size,size),
+            class_mode=None, batch_size=batch_size, shuffle=False)
         predictions_train.append(model.predict_generator(generator=training_generator_TTA, steps=n_train_files/batch_size, verbose=1))
     print('Done.')
+
     # Take the average predicted probabilities
     p_train = np.mean(predictions_train, axis=0)
     print(p_train.shape)
+    
     print('Finding thresholds...')
     from sklearn.metrics import fbeta_score
     best_bac, score = fo.optimize_BAC(y_train, p_train, num_tries=iterations)
@@ -186,6 +185,9 @@ def save_planet(logger, name, epochs, size, batch_size, learning_rate,
         print('Test set TTA ({} loops)...'.format(TTA))
         predictions_test = []
         for i in range(TTA):
+            # Test data: with TTA - no labels
+            test_generator = gen_augmentation.flow_from_directory(test_directory, target_size=(size, size),
+                 class_mode=None, batch_size=batch_size, shuffle=False)
             predictions_test.append(model.predict_generator(generator=test_generator, steps=n_test_files/batch_size, verbose=1))
         print('Done')
 
