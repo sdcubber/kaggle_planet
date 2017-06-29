@@ -58,7 +58,7 @@ def save_bottlebeck_features(size, datagen,
         target_size=(size,size),
         class_mode=None,shuffle=False, batch_size=batch_size)
 
-    n_train_files = len(os.listdir(os.path.join(train_directory, 'train')))
+    n_train_files = len(os.listdir(os.path.join(training_dir, 'train')))
     bottleneck_features_train = model.predict_generator(
         generator, n_train_files/batch_size, verbose=1)
     np.save('../models/bottleneck_features_train_{}_{}.npy'.format(ts, name), bottleneck_features_train)
@@ -68,7 +68,7 @@ def save_bottlebeck_features(size, datagen,
         target_size=(size,size),
         class_mode=None,batch_size=batch_size, shuffle=False)
 
-    n_validation_files = len(os.listdir(os.path.join(validation_directory, 'validation')))
+    n_validation_files = len(os.listdir(os.path.join(validation_dir, 'validation')))
     bottleneck_features_validation = model.predict_generator(
         generator, n_validation_files/batch_size, verbose=1)
     np.save('../models/bottleneck_features_validation_{}_{}.npy'.format(ts, name), bottleneck_features_validation)
@@ -130,12 +130,12 @@ def reconstruct_VGG(top_model_path, size, train_data_shape):
 
 
 # --- main function ---- #
-def save_planet(logger, name, epochs, size, batch_size, learning_rate,
-    treshold, iterations, TTA, debug=False):
+def save_planet(logger, name, epochs, size, batch_size,
+    treshold, iterations, TTA):
 
     start_time = time.time()
 
-    temp_training_dir, temp_validation_dir = du.make_temp_dirs(ts, name)
+    temp_training_dir, temp_validation_dir = du.make_temp_dirs(logger.ts, name)
     du.fill_temp_training_folder(temp_training_dir)
     du.move_to_validation_folder(temp_training_dir, temp_validation_dir)
 
@@ -168,7 +168,7 @@ def save_planet(logger, name, epochs, size, batch_size, learning_rate,
     # This one has to be calles AFTER the validation data has been moved back!
     # Otherwise it doesn't know the correct amount of images.
 
-    print('Saving bottleneck features')
+    print('Saving bottleneck features...')
     save_bottlebeck_features(size, gen_no_augmentation,
                              train_directory,
                              validation_directory, train_mapping, validation_mapping, name, logger.ts)
@@ -179,7 +179,7 @@ def save_planet(logger, name, epochs, size, batch_size, learning_rate,
     print('Done')
 
     print('Finetuning VGG...')
-    vgg, optimizer = reconstruct_VGG('../models/top_model_{}_{}.h5'.format(logger.ts, name),
+    model, optimizer = reconstruct_VGG('../models/top_model_{}_{}.h5'.format(logger.ts, name),
         size, train_shape)
 
     # Finetune the model
@@ -187,7 +187,7 @@ def save_planet(logger, name, epochs, size, batch_size, learning_rate,
         ModelCheckpoint('../models/VGG_{}_{}.h5'.format(logger.ts, name),
          monitor='val_loss', save_best_only=True, verbose=1)]
 
-    vgg.fit_generator(generator=training_generator, steps_per_epoch=n_train_files/batch_size,
+    model.fit_generator(generator=training_generator, steps_per_epoch=n_train_files/batch_size,
                      epochs=epochs, callbacks=callbacks, validation_data=(validation_generator),
                      validation_steps=n_validation_files/batch_size)
     print('Done.')
@@ -273,18 +273,15 @@ def main():
     parser = argparse.ArgumentParser(description='Neural network to gain money')
     parser.add_argument('name', type=str, help="name of your model")
     parser.add_argument('epochs', type=int, help="function to execute")
-    parser.add_argument('size', type=int, choices=(32,64,96,128,256), help='image size used for training')
+    parser.add_argument('size', type=int, choices=(48,64,96,128,256), help='image size used for training')
     parser.add_argument('-b','--batch_size', type=int, default=32, help='determines batch size')
-    parser.add_argument('-l','--learning_rate', type=float, default=1e-2, help='determines learning rate')
     parser.add_argument('-t','--treshold', type=float, default=0.85, help='cutoff score for storing models')
     parser.add_argument('-it', '--iterations', type=int, default=100, help='n of iterations for optimizing F score ')
-    parser.add_argument('-db','--debug', action="store_true", help='determines batch size')
     parser.add_argument('-tta', '--TTA', type=int, default=10, help='number of TTA loops')
     args = parser.parse_args()
     logger = lu.logger_class(args, time.strftime("%d%m%Y_%H:%M"), time.clock())
 
     save_planet(logger,**vars(args))
-
 
 if __name__ == "__main__":
     sys.exit(main())
