@@ -105,7 +105,7 @@ def train_top_model(size, training_dir, validation_dir, train_mapping, validatio
     model.save('../models/top_model_{}_{}.h5'.format(ts, name))
     return(train_data.shape)
 
-def reconstruct_VGG(top_model_path, size, train_data_shape):
+def reconstruct_VGG(top_model_path, size, train_data_shape, ts):
     # build the VGG16 network
     model = k.applications.VGG16(weights='imagenet', include_top=False, input_shape=(size,size,3))
     print('VGG loaded.')
@@ -176,12 +176,12 @@ def save_planet(logger, name, epochs, size, batch_size,
 
     print('Training top model...')
     train_shape = train_top_model(size, train_directory, validation_directory,
-     train_mapping, validation_mapping, name, logger.ts, batch_size)
+     train_mapping, validation_mapping,  name, logger.ts, batch_size)
     print('Done')
 
     print('Finetuning VGG...')
     model, optimizer = reconstruct_VGG('../models/top_model_{}_{}.h5'.format(logger.ts, name),
-        size, train_shape)
+        size, train_shape, logger.ts)
 
     # Finetune the model
     callbacks = [EarlyStopping(monitor='val_loss', patience=4, verbose=1),
