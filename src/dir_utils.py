@@ -12,8 +12,8 @@ def make_temp_dirs(ts, name):
     -----
     names, ts: name and timestamp for the temp folders
     """
-    temp_training_dir = '../data/TEMP_{}_{}/consensus_train/train'.format(ts, name)
-    temp_validation_dir = '../data/TEMP_{}_{}/consensus_validation/validation'.format(ts, name)
+    temp_training_dir = '../data/TEMP_{}_{}/temp_train/train'.format(ts, name)
+    temp_validation_dir = '../data/TEMP_{}_{}/temp_validation/validation'.format(ts, name)
 
     try:
         os.makedirs(temp_training_dir)
@@ -23,13 +23,19 @@ def make_temp_dirs(ts, name):
 
     return(temp_training_dir, temp_validation_dir)
 
+def fill_temp_training_folder(temp_training_dir, undersampling=False):
+    """Fill temporary training folder with images.
+    If undersampling, leave out a part of the training data (primary clear images)"""
 
-def fill_temp_training_folder(temp_training_dir):
-    """Fill temporary training folder with images."""
+    if undersampling:
+        for f in os.listdir('../data/interim/consensus_train/train'):
+            shutil.copy2(src='../data/interim/consensus_train/train/{}'.format(f),
+                         dst=os.path.join(temp_training_dir, '{}'.format(f)))
 
-    for f in os.listdir('../data/interim/consensus_train/train'):
-        shutil.copy2(src='../data/interim/consensus_train/train/{}'.format(f),
-                     dst=os.path.join(temp_training_dir, '{}'.format(f)))
+    else:
+        for f in os.listdir('../data/raw/train-jpg'):
+            shutil.copy2(src='../data/raw/train-jpg/{}'.format(f),
+                        dst=os.path.join(temp_training_dir, '{}'.format(f)))
 
 def move_to_validation_folder(temp_training_dir, temp_validation_dir, fraction=0.10):
     """Randomly move 10% of the training images to the validation folder. """

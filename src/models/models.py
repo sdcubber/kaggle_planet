@@ -540,6 +540,7 @@ class SimpleCNN_joint_GFM(object):
         self.output = dense_output
 
 class SimpleNet64_joint_GFM(object):
+
     def __init__(self, size, field_sizes):
 
         # Input

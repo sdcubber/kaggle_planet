@@ -1,38 +1,8 @@
 # coding: utf-8
-# Planet.py, but directly reading in raw data in minibatches
+# Planet_flow with VGGnet according to the keras tutorial
+# https://blog.keras.io/building-powerful-image-classification-models-using-very-little-data.html
+
 # -------imports---------- #
-
-#########
-# TODO: #
-#########
-
-# .
-# - implement GFM (will require a lot of mapping - remapping)
-# - Go over GFM algo to verify its correctness
-# - have a look at GFM (see discussion with willem)
-
-# .
-# Implement training on the full data set after determining the amount of epochs
-# To do this cheaply, swap validation data after initial training,
-# Then finetune with the final weights from training session as initial weights
-# OR: Initialize with final weights and just train on full data for some more epochs (this is EZ)
-
-# .
-# - Put everything on top of VGGnet (according to the keras tutorial -> fix the mapping once?)
-# -> first train a classifier on the VGGnet features
-# -> then add this classifier on top of VGGnet
-# -> finally, finetune classifier + top convolutional Block
-
-
-# .
-# - how are images read in? 8 bit integers or 64 bit floats? don't care if it doesnt give memory errors on the cluster
-
-# .
-# - k-fold CV? ...
-# - (proper scaling of inputs? (does this matter?))
-# - (try to implement flow_from_h5py... maybe for later. When using flow_from...,
-#   One cpu is reserved anyway to do the loading and the preprocessing so the amount of
-#   overhead here is maybe not THAT important)
 
 import os
 import sys
@@ -43,7 +13,10 @@ import argparse
 import json
 import pandas as pd
 import numpy as np
-from keras.models import Model
+import keras as k
+from keras.models import Model, Sequential
+from keras.layers import Conv2D, MaxPooling2D, Input
+from keras.layers import Activation, Dropout, Flatten, Dense
 from keras.optimizers import Adam, SGD
 from keras.callbacks import EarlyStopping, ModelCheckpoint, LearningRateScheduler
 from sklearn.metrics import fbeta_score
@@ -68,11 +41,99 @@ import dir_utils as du
 
 import extended_generator
 
+# ---- helper functions ---- #
 
+def save_bottlebeck_features(size, datagen,
+    training_dir,
+    validation_dir,
+    train_mapping,
+    validation_mapping, name, ts):
+
+    batch_size=32
+    # build the VGG16 network
+    model = k.applications.VGG16(include_top=False, weights='imagenet')
+
+    # Training data bottleneck features
+    generator = datagen.flow_from_directory(training_dir,
+        target_size=(size,size),
+        class_mode=None,shuffle=False, batch_size=batch_size)
+
+    n_train_files = len(os.listdir(os.path.join(train_directory, 'train')))
+    bottleneck_features_train = model.predict_generator(
+        generator, n_train_files/batch_size, verbose=1)
+    np.save('../models/bottleneck_features_train_{}_{}.npy'.format(ts, name), bottleneck_features_train)
+
+    # Validation data bottleneck features
+    generator = datagen.flow_from_directory(validation_dir,
+        target_size=(size,size),
+        class_mode=None,batch_size=batch_size, shuffle=False)
+
+    n_validation_files = len(os.listdir(os.path.join(validation_directory, 'validation')))
+    bottleneck_features_validation = model.predict_generator(
+        generator, n_validation_files/batch_size, verbose=1)
+    np.save('../models/bottleneck_features_validation_{}_{}.npy'.format(ts, name), bottleneck_features_validation)
+
+def make_top_model(shape):
+
+    model = Sequential()
+    model.add(Flatten(input_shape=shape))
+    model.add(Dense(256, activation='relu'))
+    model.add(Dropout(0.5))
+    model.add(Dense(256, activation='relu'))
+    model.add(Dropout(0.5))
+    model.add(Dense(17, activation='sigmoid'))
+
+    model.compile(optimizer='adam',loss='binary_crossentropy', metrics=['accuracy']) # binary crossentropy loss!
+    return(model)
+
+def train_top_model(size, training_dir, validation_dir, train_mapping, validation_mapping, name, ts):
+    # Load training data: bottleneck features from VGGnet
+    train_data = np.load('../models/bottleneck_features_train_{}_{}.npy'.format(ts, name))
+    validation_data = np.load('../models/bottleneck_features_validation_{}_{}.npy'.format(ts,name))
+
+    # Mind the ordering!
+    train_labels = np.array([train_mapping['train/'+d] for d in os.listdir(os.path.join(training_dir, 'train'))])
+    validation_labels = np.array([validation_mapping['validation/'+d] for d in os.listdir(os.path.join(validation_dir, 'validation'))])
+
+    # Define top model
+    model = make_top_model(train_data.shape[1:])
+
+    # Use early stopping
+    callbacks = [EarlyStopping(monitor='val_loss', patience=6, verbose=1)]
+    model.fit(train_data, train_labels, epochs=100,batch_size=32,validation_data=(validation_data, validation_labels), verbose=1,callbacks=callbacks)
+
+    model.save('../models/top_model_{}_{}.h5'.format(ts, name))
+    return(train_data.shape)
+
+def reconstruct_VGG(top_model_path, size, train_data_shape):
+    # build the VGG16 network
+    model = k.applications.VGG16(weights='imagenet', include_top=False, input_shape=(size,size,3))
+    print('VGG loaded.')
+
+    top_model = make_top_model(shape=model.output_shape[1:])
+    top_model.load_weights('../models/top_model_{}_{}.h5'.format(ts, name))
+
+    full_model = Model(inputs=model.input, outputs=top_model(model.output))
+
+    # Set the first 15 layers to non-trainable
+    for layer in full_model.layers[:15]:
+        layer.trainable=False
+
+    # Compile the model with a SGD/momentum optimizer
+    # and a very slow learning rate
+    optimizer = k.optimizers.SGD(lr=1e-4, momentum=0.9)
+    full_model.compile(loss='binary_crossentropy',
+                      optimizer=optimizer,
+                      metrics=['accuracy'])
+
+    return(full_model, optimizer)
+
+
+# --- main function ---- #
 def save_planet(logger, name, epochs, size, batch_size, learning_rate,
-    treshold, iterations, TTA, optimizer, debug=False):
+    treshold, iterations, TTA, debug=False):
+
     start_time = time.time()
-    ts = logger.ts
 
     temp_training_dir, temp_validation_dir = du.make_temp_dirs(ts, name)
     du.fill_temp_training_folder(temp_training_dir)
@@ -107,39 +168,32 @@ def save_planet(logger, name, epochs, size, batch_size, learning_rate,
     # This one has to be calles AFTER the validation data has been moved back!
     # Otherwise it doesn't know the correct amount of images.
 
-    # --------load model--------- #
-    logger.log_event("Initializing model...")
-    if debug:
-        architecture = m.SimpleCNN(size, output_size=17)
-    else:
-        architecture = m.SimpleNet64_2(size, output_size=17)
+    print('Saving bottleneck features')
+    save_bottlebeck_features(size, gen_no_augmentation,
+                             train_directory,
+                             validation_directory, train_mapping, validation_mapping, name, logger.ts)
+    print('Done')
 
-    model = Model(inputs=architecture.input, outputs=architecture.output)
+    print('Training top model...')
+    train_shape = train_top_model(size, train_directory, validation_directory, train_mapping, validation_mapping, name, logger.ts)
+    print('Done')
 
-    def lr_schedule(epoch):
-        """Learning rate scheduler"""
-        return learning_rate * (0.1 ** int(epoch / 10))
+    print('Finetuning VGG...')
+    vgg, optimizer = reconstruct_VGG('../models/top_model_{}_{}.h5'.format(logger.ts, name),
+        size, train_shape)
 
-    if optimizer == 'adam':
-        optimizer = Adam()
-    elif optimizer == 'sgd':
-        optimizer = SGD(lr=learning_rate, decay=1e-6, momentum=0.9, nesterov=True)
-
-    model.compile(loss='binary_crossentropy', optimizer=optimizer, metrics=['accuracy'])
-
+    # Finetune the model
     callbacks = [EarlyStopping(monitor='val_loss', patience=4, verbose=1),
-    ModelCheckpoint('../models/{}_{}.h5'.format(logger.ts, name),
-     monitor='val_loss', save_best_only=True, verbose=1),
-     LearningRateScheduler(lr_schedule)]
+        ModelCheckpoint('../models/VGG_{}_{}.h5'.format(logger.ts, name),
+         monitor='val_loss', save_best_only=True, verbose=1)]
 
-    # --------training model--------- #
-    # Load previous weights?
-
-    history = model.fit_generator(generator=training_generator, steps_per_epoch=n_train_files/batch_size,epochs=epochs, verbose=1,
-    callbacks=callbacks, validation_data=(validation_generator), validation_steps=n_validation_files/batch_size)
+    vgg.fit_generator(generator=training_generator, steps_per_epoch=n_train_files/batch_size,
+                     epochs=epochs, callbacks=callbacks, validation_data=(validation_generator),
+                     validation_steps=n_validation_files/batch_size)
+    print('Done.')
 
     # Load best model
-    model.load_weights('../models/{}_{}.h5'.format(logger.ts, name))
+    model.load_weights('../models/VGG_{}_{}.h5'.format(logger.ts, name))
     model.compile(loss='binary_crossentropy', optimizer=optimizer, metrics=['accuracy'])
 
     # --------move back validation data--------- #
@@ -148,18 +202,10 @@ def save_planet(logger, name, epochs, size, batch_size, learning_rate,
     print('Remapping labels...')
     train_files = [f.split('.')[0] for f in os.listdir(temp_training_dir)]
     train_labels = [df_train.iloc[np.where(df_train.image_name.values == train_file)].tags.values[0] for train_file in train_files]
-
     y_train = fu.binarize(train_labels, label_map)
     print('Done.')
 
     n_train_files = len(os.listdir(temp_training_dir))
-
-    # Finetune model on full data with 100x smaller lr for 5 epochs
-
-    #model.compile(loss='binary_crossentropy', optimizer=Adam(lr=0.0001, decay=0.5), metrics=['accuracy'])
-    #model.fit_generator(generator=training_generator, steps_per_epoch=n_train_files/batch_size,epochs=5, verbose=1)
-    #model.save('../models/{}_{}_finetuned.h5'.format(logger.ts, name))
-
     # -------Search for best thresholds-------- #
     # Predict full training data. With TTA to make predictions stable!
     print('TTA ({} loops)...'.format(TTA))
@@ -206,22 +252,22 @@ def save_planet(logger, name, epochs, size, batch_size, learning_rate,
         predictions_df['tags'] = predictions_df['tags'].map(test_mapping)
 
         # Save predictions without consensus predictions
-        predictions_df.to_csv('../logs/predictions/{}_{}_{}.csv'.format(logger.ts, name, score), index=False)
+        predictions_df.to_csv('../logs/predictions/VGG_{}_{}_{}.csv'.format(logger.ts, name, score), index=False)
 
         # Save training history and model architecture
-        pd.DataFrame(history.history).to_pickle('../models/{}_{}_{}.pkl'.format(logger.ts, name, score))
+        pd.DataFrame(history.history).to_pickle('../models/VGG_{}_{}_{}.pkl'.format(logger.ts, name, score))
 
         with open('../models/{}_{}_{}_architecture.json'.format(logger.ts, name, score), 'w') as json_file:
                 json_file.write(model.to_json())
     else:
         logger.log_event('Low score - not storing anything.')
 
-
     # Remove temp folders
-    du.remove_temp_dirs(ts, name)
+    du.remove_temp_dirs(logger.ts, name)
 
     elapsed_time = time.time() - start_time
     print('Elapsed time: {} minutes'.format(np.round(elapsed_time/60, 2)))
+    print('Done.')
 
 def main():
     parser = argparse.ArgumentParser(description='Neural network to gain money')
@@ -234,7 +280,6 @@ def main():
     parser.add_argument('-it', '--iterations', type=int, default=100, help='n of iterations for optimizing F score ')
     parser.add_argument('-db','--debug', action="store_true", help='determines batch size')
     parser.add_argument('-tta', '--TTA', type=int, default=10, help='number of TTA loops')
-    parser.add_argument('-op', '--optimizer', type=str, default='adam', choices=('adam', 'sgd'), help='Optimizer')
     args = parser.parse_args()
     logger = lu.logger_class(args, time.strftime("%d%m%Y_%H:%M"), time.clock())
 
