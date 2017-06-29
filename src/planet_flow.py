@@ -18,17 +18,8 @@
 # OR: Initialize with final weights and just train on full data for some more epochs (this is EZ)
 
 # .
-# - Put everything on top of VGGnet (according to the keras tutorial -> fix the mapping once?)
-# -> first train a classifier on the VGGnet features
-# -> then add this classifier on top of VGGnet
-# -> finally, finetune classifier + top convolutional Block
-
-
-# .
-# - how are images read in? 8 bit integers or 64 bit floats? don't care if it doesnt give memory errors on the cluster
-
-# .
 # - k-fold CV? ...
+# - how are images read in? 8 bit integers or 64 bit floats? don't care if it doesnt give memory errors on the cluster
 # - (proper scaling of inputs? (does this matter?))
 # - (try to implement flow_from_h5py... maybe for later. When using flow_from...,
 #   One cpu is reserved anyway to do the loading and the preprocessing so the amount of
