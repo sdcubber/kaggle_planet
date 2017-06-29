@@ -86,7 +86,7 @@ def make_top_model(shape):
     model.compile(optimizer='adam',loss='binary_crossentropy', metrics=['accuracy']) # binary crossentropy loss!
     return(model)
 
-def train_top_model(size, training_dir, validation_dir, train_mapping, validation_mapping, name, ts):
+def train_top_model(size, training_dir, validation_dir, train_mapping, validation_mapping, name, ts, batch_size):
     # Load training data: bottleneck features from VGGnet
     train_data = np.load('../models/bottleneck_features_train_{}_{}.npy'.format(ts, name))
     validation_data = np.load('../models/bottleneck_features_validation_{}_{}.npy'.format(ts,name))
@@ -100,7 +100,7 @@ def train_top_model(size, training_dir, validation_dir, train_mapping, validatio
 
     # Use early stopping
     callbacks = [EarlyStopping(monitor='val_loss', patience=6, verbose=1)]
-    model.fit(train_data, train_labels, epochs=100,batch_size=32,validation_data=(validation_data, validation_labels), verbose=1,callbacks=callbacks)
+    model.fit(train_data, train_labels, epochs=100,batch_size=batch_size,validation_data=(validation_data, validation_labels), verbose=1,callbacks=callbacks)
 
     model.save('../models/top_model_{}_{}.h5'.format(ts, name))
     return(train_data.shape)
@@ -175,7 +175,8 @@ def save_planet(logger, name, epochs, size, batch_size,
     print('Done')
 
     print('Training top model...')
-    train_shape = train_top_model(size, train_directory, validation_directory, train_mapping, validation_mapping, name, logger.ts)
+    train_shape = train_top_model(size, train_directory, validation_directory,
+     train_mapping, validation_mapping, name, logger.ts, batch_size)
     print('Done')
 
     print('Finetuning VGG...')
