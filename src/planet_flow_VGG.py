@@ -3,7 +3,7 @@
 # https://blog.keras.io/building-powerful-image-classification-models-using-very-little-data.html
 
 # -------imports---------- #
-
+######  EARLY STOPPING FOR THE TOP MODEL!!
 import os
 import sys
 import time
@@ -254,11 +254,6 @@ def save_planet(logger, name, epochs, size, batch_size,
         # Save predictions without consensus predictions
         predictions_df.to_csv('../logs/predictions/VGG_{}_{}_{}.csv'.format(logger.ts, name, score), index=False)
 
-        # Save training history and model architecture
-        pd.DataFrame(history.history).to_pickle('../models/VGG_{}_{}_{}.pkl'.format(logger.ts, name, score))
-
-        with open('../models/{}_{}_{}_architecture.json'.format(logger.ts, name, score), 'w') as json_file:
-                json_file.write(model.to_json())
     else:
         logger.log_event('Low score - not storing anything.')
 
