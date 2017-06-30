@@ -253,7 +253,7 @@ def save_planet(logger, name, epochs, size, batch_size,
 
         # Save predictions without consensus predictions
         predictions_df.to_csv('../logs/predictions/VGG_{}_{}_{}.csv'.format(logger.ts, name, score), index=False)
-
+        
     else:
         logger.log_event('Low score - not storing anything.')
 

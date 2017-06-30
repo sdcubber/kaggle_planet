@@ -124,7 +124,6 @@ def save_planet(logger, name, epochs, size, batch_size, learning_rate,
      LearningRateScheduler(lr_schedule)]
 
     # --------training model--------- #
-    # Load previous weights?
 
     history = model.fit_generator(generator=training_generator, steps_per_epoch=n_train_files/batch_size,epochs=epochs, verbose=1,
     callbacks=callbacks, validation_data=(validation_generator), validation_steps=n_validation_files/batch_size)
