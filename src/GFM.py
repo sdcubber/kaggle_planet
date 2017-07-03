@@ -124,10 +124,11 @@ def planet_GFM(logger, name, epochs, size, method, batch_size, threshold, debug,
         predictions_test_filled = []
         n_labels = 17
 
+
+        enc = encoder.fit(np.arange(0,10).reshape(-1, 1)) # fit the encoder on here and not per label!!! to make sure that every possible class is encoded
         for i in range(n_labels): # Iterate over the columns of the matrix Y
 
             # Do a one-hot encoding of column i
-            # fit the encoder on all the labels to make sure that every possible class is encoded
             enc = encoder.fit(np.concatenate((Y_train[:,i], Y_valid[:,i]), axis=0).reshape(-1,1))
             Y_train_i = enc.transform(Y_train[:,i].reshape(-1, 1))
             Y_valid_i = enc.transform(Y_valid[:,i].reshape(-1, 1))
@@ -201,9 +202,9 @@ def planet_GFM(logger, name, epochs, size, method, batch_size, threshold, debug,
         # Generate 17 output vectors for training and validation data
         outputs_train = []
         outputs_valid = []
+        enc = encoder.fit(np.arange(0,10).reshape(-1, 1)) # fit the encoder on here and not per label!!! to make sure that every possible class is encoded
 
         for i in range(Y_train.shape[1]):
-            enc = encoder.fit(np.concatenate((Y_train[:,i], Y_valid[:,i]), axis=0).reshape(-1,1))
             Y_train_i = enc.transform(Y_train[:,i].reshape(-1, 1))
             Y_valid_i = enc.transform(Y_valid[:,i].reshape(-1, 1))
             outputs_train.append(Y_train_i)

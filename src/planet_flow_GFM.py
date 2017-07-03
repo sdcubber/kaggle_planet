@@ -80,23 +80,16 @@ def save_planet(logger, name, epochs, size, batch_size, learning_rate,
     # Generate 17 output vectors for training and validation data
     outputs_train = []
     outputs_valid = []
-
+    field_size = []
+    enc = encoder.fit(np.arange(0,10).reshape(-1, 1)) # fit the encoder on here and not per label!!! to make sure that every possible class is encoded
     for i in range(Y_train.shape[1]):
     # concatenate train and validation data to fit the encoder
-    # so that every possible value of s is covered
-        enc = encoder.fit(np.concatenate((Y_train[:,i], Y_valid[:,i]), axis=0).reshape(-1,1))
         Y_train_i = enc.transform(Y_train[:,i].reshape(-1, 1))
         Y_valid_i = enc.transform(Y_valid[:,i].reshape(-1, 1))
         outputs_train.append(Y_train_i)
         outputs_valid.append(Y_valid_i)
-
-    # Obtain field size
-    n_labels = 17
-    field_size = []
-    for i in range(n_labels):
-        enc = encoder.fit(np.concatenate((Y_train[:,i], Y_valid[:,i]), axis=0).reshape(-1,1))
-        Y_train_i = enc.transform(Y_train[:,i].reshape(-1, 1))
         field_size.append(Y_train_i.shape[1])
+
     print('Field sizes: {}'.format(field_size))
 
     # Put the outputs in a list of lists of arrays
