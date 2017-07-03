@@ -111,7 +111,6 @@ def save_planet(logger, name, epochs, size, batch_size, learning_rate,
     for i in range(n_validation_files):
         output_fields_validation.append([output_field[i,:] for output_field in outputs_valid])
 
-
     # Redefine the labels mappings to the elements of Y_train and Y_valid required for the generators
     # Be careful with the ordering!!!
     # The dicts should have filenames as keys and lists of arrays as values

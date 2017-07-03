@@ -49,7 +49,7 @@ def save_bottlebeck_features(size, datagen,
     train_mapping,
     validation_mapping, name, ts):
 
-    batch_size=32
+    batch_size=20
     # build the VGG16 network
     model = k.applications.VGG16(include_top=False, weights='imagenet')
 
@@ -253,7 +253,7 @@ def save_planet(logger, name, epochs, size, batch_size,
 
         # Save predictions without consensus predictions
         predictions_df.to_csv('../logs/predictions/VGG_{}_{}_{}.csv'.format(logger.ts, name, score), index=False)
-        
+
     else:
         logger.log_event('Low score - not storing anything.')
 
