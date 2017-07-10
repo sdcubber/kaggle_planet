@@ -224,6 +224,7 @@ def save_planet(logger, name, epochs, size, batch_size, learning_rate,
     with open('../logs/pickles/{}_{}_filenames'.format(ts, name), 'wb') as fp:
         pickle.dump(training_generator_TTA.filenames, fp)
 
+
     score_GFM_train = fbeta_score(y_train, optimal_predictions_train, beta=2, average='samples')
     print('F_2 score on the training data with GFM: {}'.format(score_GFM_train))
     score_GFM_valid = fbeta_score(y_valid, optimal_predictions_valid, beta=2, average='samples')

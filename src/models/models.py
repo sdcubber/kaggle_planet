@@ -1,6 +1,7 @@
 # Keras model classes for the planet kaggle challenge
 import numpy as np
 import keras as k
+import keras.backend as K
 from keras.models import Model, Input
 from keras.layers import Dense, Dropout, Flatten, Concatenate, Activation
 from keras.layers import Conv2D, MaxPooling2D, AveragePooling2D, GlobalAveragePooling2D, GlobalMaxPooling2D
@@ -542,14 +543,15 @@ class SimpleCNN_joint_GFM(object):
 class GFM_top_classifier(object):
     """Input should be flat."""
 
-    def __init__(self, size, field_sizes):
+    def __init__(self, shape, field_sizes, nodes):
         # Input
-        network_input = Input(shape=(int(size),))
+        network_input = Input(shape[1:])
 
+        max_pooled_input = GlobalMaxPooling2D()(network_input)
         # Some shared layers
-        shared_dense_1 = Dense(128, activation='relu')(network_input)
-        shared_dense_2 = Dense(128, activation='relu')(shared_dense_1)
-        shared_dense_3 = Dense(128, activation='relu')(shared_dense_2)
+        shared_dense_1 = Dense(nodes, activation='relu')(max_pooled_input)
+        shared_dense_2 = Dense(nodes, activation='relu')(shared_dense_1)
+        shared_dense_3 = Dense(nodes, activation='relu')(shared_dense_2)
 
         # Stack 17 multiclass classification problems on top
         multiclass_0 = Dense(field_sizes[0], activation='softmax')(shared_dense_3)

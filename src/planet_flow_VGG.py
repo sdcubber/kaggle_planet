@@ -138,7 +138,6 @@ def save_planet(logger, name, epochs, size, batch_size,
     du.fill_temp_training_folder(temp_training_dir)
     du.move_to_validation_folder(temp_training_dir, temp_validation_dir)
 
-    # ------ call data generators ------#
     train_directory = os.path.split(temp_training_dir)[0]
     validation_directory = os.path.split(temp_validation_dir)[0]
     test_directory = '../data/interim/consensus_test/'
