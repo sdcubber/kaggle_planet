@@ -539,6 +539,58 @@ class SimpleCNN_joint_GFM(object):
         self.input = image_input
         self.output = dense_output
 
+class GFM_top_classifier(object):
+    """Input should be flat."""
+
+    def __init__(self, size, field_sizes):
+        # Input
+        network_input = Input(shape=(int(size),))
+
+        # Some shared layers
+        shared_dense_1 = Dense(128, activation='relu')(network_input)
+        shared_dense_2 = Dense(128, activation='relu')(shared_dense_1)
+        shared_dense_3 = Dense(128, activation='relu')(shared_dense_2)
+
+        # Stack 17 multiclass classification problems on top
+        multiclass_0 = Dense(field_sizes[0], activation='softmax')(shared_dense_3)
+        multiclass_1 = Dense(field_sizes[1], activation='softmax')(shared_dense_3)
+        multiclass_2 = Dense(field_sizes[2], activation='softmax')(shared_dense_3)
+        multiclass_3 = Dense(field_sizes[3], activation='softmax')(shared_dense_3)
+        multiclass_4 = Dense(field_sizes[4], activation='softmax')(shared_dense_3)
+        multiclass_5 = Dense(field_sizes[5], activation='softmax')(shared_dense_3)
+        multiclass_6 = Dense(field_sizes[6], activation='softmax')(shared_dense_3)
+        multiclass_7 = Dense(field_sizes[7], activation='softmax')(shared_dense_3)
+        multiclass_8 = Dense(field_sizes[8], activation='softmax')(shared_dense_3)
+        multiclass_9 = Dense(field_sizes[9], activation='softmax')(shared_dense_3)
+        multiclass_10 = Dense(field_sizes[10], activation='softmax')(shared_dense_3)
+        multiclass_11 = Dense(field_sizes[11], activation='softmax')(shared_dense_3)
+        multiclass_12 = Dense(field_sizes[12], activation='softmax')(shared_dense_3)
+        multiclass_13 = Dense(field_sizes[13], activation='softmax')(shared_dense_3)
+        multiclass_14 = Dense(field_sizes[14], activation='softmax')(shared_dense_3)
+        multiclass_15 = Dense(field_sizes[15], activation='softmax')(shared_dense_3)
+        multiclass_16 = Dense(field_sizes[16], activation='softmax')(shared_dense_3)
+
+        dense_output = [multiclass_0,
+                        multiclass_1,
+                        multiclass_2,
+                        multiclass_3,
+                        multiclass_4,
+                        multiclass_5,
+                        multiclass_6,
+                        multiclass_7,
+                        multiclass_8,
+                        multiclass_9,
+                        multiclass_10,
+                        multiclass_11,
+                        multiclass_12,
+                        multiclass_13,
+                        multiclass_14,
+                        multiclass_15,
+                        multiclass_16]
+
+        self.input = network_input
+        self.output = dense_output
+
 class SimpleNet64_joint_GFM(object):
 
     def __init__(self, size, field_sizes):
