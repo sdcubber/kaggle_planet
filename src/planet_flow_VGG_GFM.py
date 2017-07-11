@@ -349,6 +349,14 @@ def save_planet(logger, name, epochs, size, batch_size, treshold, TTA, nodes, de
         predictions_df['tags'] = predictions_df['tags'].map(train_mapping)
         predictions_df.to_csv('../logs/training_predictions/GFM_VGG_{}_{}_{}.csv'.format(ts, name, score_GFM_valid), index=False)
 
+        # Save validation set predictions
+        preds = [' '.join(np.array(labels)[pred_row == 1]) for pred_row in optimal_predictions_valid]
+        valid_mapping = dict(zip([f for f in df_train.image_name], preds))
+
+        predictions_df = pd.DataFrame({'image_name': df_train.image_name, 'tags': df_train.image_name})
+        predictions_df['tags'] = predictions_df['tags'].map(valid_mapping)
+        predictions_df.to_csv('../logs/training_predictions/GFM_VGG_validation_{}_{}_{}.csv'.format(ts, name, score_GFM_valid), index=False)
+
     else:
         logger.log_event('Low score - not storing anything.')
 
