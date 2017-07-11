@@ -106,7 +106,7 @@ def make_top_model(shape, field_size, nodes):
     model.compile(loss='binary_crossentropy', optimizer='Adam')
     return(model)
 
-def reconstruct_VGG(top_model_path, size, top_model_input_shape, field_size, nodes, ts, name):
+def reconstruct_VGG(top_model_path, size, top_model_input_shape, field_size, nodes, ts, name, finetune):
     # build the VGG16 network
     model = k.applications.VGG16(weights='imagenet', include_top=False, input_shape=(size,size,3))
     print('VGG loaded.')
@@ -117,8 +117,12 @@ def reconstruct_VGG(top_model_path, size, top_model_input_shape, field_size, nod
     full_model = Model(inputs=model.input, outputs=top_model(model.output))
 
     # Set the first 15 layers to non-trainable
-    for layer in full_model.layers[:15]:
-        layer.trainable=False
+    if finetune == 1:
+        for layer in full_model.layers[:15]:
+            layer.trainable=False
+    elif finetune == 2:
+        for layer in full_model.layers[:11]:
+            layer.trainable=False
 
     # Compile the model with a SGD/momentum optimizer
     # and a very slow learning rate
@@ -129,7 +133,7 @@ def reconstruct_VGG(top_model_path, size, top_model_input_shape, field_size, nod
     print('VGG reconstructed.')
     return(full_model, optimizer)
 
-def save_planet(logger, name, epochs, size, batch_size, treshold, TTA, nodes, debug=False):
+def save_planet(logger, name, epochs, size, batch_size, treshold, TTA, nodes, finetune,load_weights,debug=False):
     ts=logger.ts
     start_time = time.time()
 
@@ -206,13 +210,18 @@ def save_planet(logger, name, epochs, size, batch_size, treshold, TTA, nodes, de
     class_mode='GFM', multilabel_classes=validation_mapping, n_class=17, batch_size=batch_size, shuffle=False, field_sizes=field_size)
 
     if debug:
-        assert size == 48, 'Stored bottleneck features only available for size 48x48'
         print('Reading previously stored features...')
-        features_train = np.load('/media/stijndc/data/planet_2/models/debug_features_train_48.npy')
-        features_valid = np.load('/media/stijndc/data/planet_2/models/debug_features_valid_48.npy')
-        features_test = np.load('/media/stijndc/data/planet_2/models/debug_features_test_48.npy')
+        if size == 48:
+            features_train = np.load('../models/GFM_VGG/debug_features_train_48.npy')
+            features_valid = np.load('../models/GFM_VGG/debug_features_valid_48.npy')
+            features_test = np.load('../models/GFM_VGG/debug_features_test_48.npy')
+        elif size ==128:
+            features_train = np.load('../models/GFM_VGG/debug_features_train_128.npy')
+            features_valid = np.load('../models/GFM_VGG/debug_features_valid_128.npy')
+            features_test = np.load('../models/GFM_VGG/debug_features_test_128.npy')
+
     else:
-        print('Obtaining bottleneck features...')
+        print('Producing bottleneck features...')
         save_bottlebeck_features(size, gen_no_augmentation,
                                  train_directory,
                                  validation_directory, test_directory, name, logger.ts)
@@ -257,7 +266,13 @@ def save_planet(logger, name, epochs, size, batch_size, treshold, TTA, nodes, de
     # --- Reconstruct VGG model and finetune top conv layer --- #
     print('Finetuning VGG...')
     model, optimizer = reconstruct_VGG('../models/top_model_{}_{}.h5'.format(logger.ts, name),
-        size, features_train.shape, field_size, nodes,logger.ts, name)
+        size, features_train.shape, field_size, nodes,logger.ts, name, finetune)
+
+    if load_weights:
+        print('Loading pretrained weights...')
+        # load weights from a previous model run
+        assert size == 128, "weights only available for size 128"
+        model.load_weights('../models/GFM_VGG/VGG_GFM10072017_17:16_GFM_pre_128.h5')
 
     # Finetune the model
     callbacks = [EarlyStopping(monitor='val_loss', patience=4, verbose=1),
@@ -392,15 +407,17 @@ def save_planet(logger, name, epochs, size, batch_size, treshold, TTA, nodes, de
     print('Elapsed time: {} minutes'.format(np.round(elapsed_time/60, 2)))
 
 def main():
-    parser = argparse.ArgumentParser(description='Neural network to gain money')
+    parser = argparse.ArgumentParser(description='GFM method on top of VGG16')
     parser.add_argument('name', type=str, help="name of your model")
     parser.add_argument('epochs', type=int, help="function to execute")
     parser.add_argument('size', type=int, choices=(48,64,96,128,224,256), help='image size used for training')
     parser.add_argument('-b','--batch_size', type=int, default=32, help='determines batch size')
     parser.add_argument('-t','--treshold', type=float, default=0.85, help='cutoff score for storing models')
-    parser.add_argument('-db','--debug', action="store_true", help='debug mode')
     parser.add_argument('-tta', '--TTA', type=int, default=10, help='number of TTA loops')
     parser.add_argument('-nod', '--nodes', type=int, default=128, help='number of nodes in GFM top model')
+    parser.add_argument('-ft', '--finetune', type=int, default=1, help='number of VGG blocks to finetune')
+    parser.add_argument('-lw', '--load_weights', action='store_true', help='load pretrained weights')
+    parser.add_argument('-db', '--debug', action='store_true', help='debug mode')
     args = parser.parse_args()
     logger = lu.logger_class(args, time.strftime("%d%m%Y_%H:%M"), time.clock())
 
