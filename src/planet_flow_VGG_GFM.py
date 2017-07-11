@@ -198,8 +198,8 @@ def save_planet(logger, name, epochs, size, batch_size, treshold, TTA, nodes, fi
 
     # Generators - with and without data augmentation
     gen_no_augmentation = extended_generator_GFM.ImageDataGenerator(rescale=1./255)
-    gen_augmentation = extended_generator_GFM.ImageDataGenerator(rotation_range=0, width_shift_range=0.05, height_shift_range=0.05,
-    horizontal_flip=True, vertical_flip=True, rescale=1./255)
+    gen_augmentation = extended_generator_GFM.ImageDataGenerator(rotation_range=0, width_shift_range=0.10, height_shift_range=0.10,
+    horizontal_flip=True, vertical_flip=True, rescale=1./255, fill_mode='reflect')
 
     # Training data: with augmentation - with labels
     training_generator = gen_augmentation.flow_from_directory(train_directory, target_size=(size,size),
