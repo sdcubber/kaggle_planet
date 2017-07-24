@@ -24,7 +24,7 @@ from keras.models import Model, Sequential
 from keras.layers import Conv2D, MaxPooling2D, Input
 from keras.layers import Activation, Dropout, Flatten, Dense
 from keras.optimizers import Adam, SGD
-from keras.callbacks import EarlyStopping, ModelCheckpoint, LearningRateScheduler
+from keras.callbacks import EarlyStopping, ModelCheckpoint, LearningRateScheduler, ReduceLROnPlateau
 from sklearn.metrics import fbeta_score
 from sklearn.model_selection import train_test_split
 
@@ -36,14 +36,6 @@ import models.F_optimizers as fo
 import plots.plot_utils as pu
 import log_utils as lu
 import dir_utils as du
-
-# Import extended datagenerator
-# Source: https://gist.github.com/jandremarais/6bf673c76203f612f5ab2981430eb2ef
-# See also: https://github.com/fchollet/keras/issues/3296
-# !!! The order in which the generator yields the files is not the same order as in the folder structure!
-# Though it is the same ordering as listed by os.listdirt(directory)
-# This has to do with the way the filesystem orders the files
-# Solution: make sure to map the predictions correctly
 
 # Import GFM for the GFM algorithm utility functions
 import GFM as GFM
@@ -106,7 +98,7 @@ def make_top_model(shape, field_size, nodes):
     model.compile(loss='binary_crossentropy', optimizer='Adam')
     return(model)
 
-def reconstruct_VGG(top_model_path, size, top_model_input_shape, field_size, nodes, ts, name, finetune):
+def reconstruct_VGG(top_model_path, size, top_model_input_shape, field_size, nodes, ts, name, finetune, optimizer):
     # build the VGG16 network
     model = k.applications.VGG16(weights='imagenet', include_top=False, input_shape=(size,size,3))
     print('VGG loaded.')
@@ -123,22 +115,27 @@ def reconstruct_VGG(top_model_path, size, top_model_input_shape, field_size, nod
     elif finetune == 2:
         for layer in full_model.layers[:11]:
             layer.trainable=False
+    elif finetune == 3:
+        # train full model
+        print('Training full model')
 
     # Compile the model with a SGD/momentum optimizer
     # and a very slow learning rate
-    optimizer = k.optimizers.SGD(lr=1e-4, momentum=0.9)
+    if optimizer == 'sgd':
+        optimizer = k.optimizers.SGD(lr=1e-5, momentum=0.9)
+    else:
+        optimizer = k.optimizers.Adam(lr=1e-5)
+
     full_model.compile(loss='binary_crossentropy',
-                      optimizer=optimizer,
-                      metrics=['accuracy'])
+                      optimizer=optimizer)
     print('VGG reconstructed.')
     return(full_model, optimizer)
 
-def save_planet(logger, name, epochs, size, batch_size, treshold, TTA, nodes, finetune,load_weights,debug=False):
+def save_planet(logger, name, epochs, size, batch_size, treshold, TTA, nodes, finetune,load_weights,optimizer,debug=False):
     ts=logger.ts
     start_time = time.time()
 
     # --- Preprocessing --- #
-
     # Make temporary directories, fill with training and validation data
     temp_training_dir, temp_validation_dir = du.make_temp_dirs(logger.ts, name)
     du.fill_temp_training_folder(temp_training_dir)
@@ -198,7 +195,7 @@ def save_planet(logger, name, epochs, size, batch_size, treshold, TTA, nodes, fi
 
     # Generators - with and without data augmentation
     gen_no_augmentation = extended_generator_GFM.ImageDataGenerator(rescale=1./255)
-    gen_augmentation = extended_generator_GFM.ImageDataGenerator(rotation_range=0, width_shift_range=0.10, height_shift_range=0.10,
+    gen_augmentation = extended_generator_GFM.ImageDataGenerator(rotation_range=0, width_shift_range=0.05, height_shift_range=0.05,
     horizontal_flip=True, vertical_flip=True, rescale=1./255, fill_mode='reflect')
 
     # Training data: with augmentation - with labels
@@ -266,7 +263,7 @@ def save_planet(logger, name, epochs, size, batch_size, treshold, TTA, nodes, fi
     # --- Reconstruct VGG model and finetune top conv layer --- #
     print('Finetuning VGG...')
     model, optimizer = reconstruct_VGG('../models/top_model_{}_{}.h5'.format(logger.ts, name),
-        size, features_train.shape, field_size, nodes,logger.ts, name, finetune)
+        size, features_train.shape, field_size, nodes,logger.ts, name, finetune, optimizer)
 
     if load_weights:
         print('Loading pretrained weights...')
@@ -277,7 +274,8 @@ def save_planet(logger, name, epochs, size, batch_size, treshold, TTA, nodes, fi
     # Finetune the model
     callbacks = [EarlyStopping(monitor='val_loss', patience=4, verbose=1),
         ModelCheckpoint('../models/VGG_GFM{}_{}.h5'.format(logger.ts, name),
-         monitor='val_loss', save_best_only=True, verbose=1)]
+         monitor='val_loss', save_best_only=True, verbose=1),
+         ReduceLROnPlateau(monitor='val_loss',factor=0.1,patience=2,cooldown=2,verbose=1)]
 
     model.fit_generator(generator=training_generator, steps_per_epoch=n_train_files/batch_size,
                      epochs=epochs, callbacks=callbacks, validation_data=(validation_generator),
@@ -349,7 +347,8 @@ def save_planet(logger, name, epochs, size, batch_size, treshold, TTA, nodes, fi
         # Save test predictions for submission
         # Convert binary predictions to label strings - define a mapping to the file names
         preds = [' '.join(np.array(labels)[pred_row == 1]) for pred_row in optimal_predictions_test]
-        test_mapping = dict(zip([f for f in df_test.image_name], preds))
+        test_files = [f.split('.')[0] for f in os.listdir('../data/interim/consensus_test/test/')]
+        test_mapping = dict(zip([f for f in test_files], preds))
 
         # Map the predictions to filenames in df_test
         predictions_df = pd.DataFrame({'image_name': df_test.image_name, 'tags': df_test.image_name})
@@ -418,6 +417,8 @@ def main():
     parser.add_argument('-ft', '--finetune', type=int, default=1, help='number of VGG blocks to finetune')
     parser.add_argument('-lw', '--load_weights', action='store_true', help='load pretrained weights')
     parser.add_argument('-db', '--debug', action='store_true', help='debug mode')
+    parser.add_argument('-opt', '--optimizer', type=str,
+     choices=('sgd', 'adam'),default='sgd', help='optimizer to use for finetuning')
     args = parser.parse_args()
     logger = lu.logger_class(args, time.strftime("%d%m%Y_%H:%M"), time.clock())
 
