@@ -100,7 +100,7 @@ def make_top_model(shape, field_size, nodes):
 
 def reconstruct_VGG(top_model_path, size, top_model_input_shape, field_size, nodes, ts, name, finetune, optimizer):
     # build the VGG16 network
-    model = k.applications.VGG16(weights='imagenet', include_top=False, input_shape=(size,size,3))
+    model = k.applications.VGG19(weights='imagenet', include_top=False, input_shape=(size,size,3))
     print('VGG loaded.')
 
     top_model = make_top_model(top_model_input_shape, field_size, nodes)
