@@ -49,9 +49,9 @@ def save_bottlebeck_features(size, datagen,
     train_mapping,
     validation_mapping, name, ts):
 
-    batch_size=20
+    batch_size=32
     # build the VGG16 network
-    model = k.applications.VGG16(include_top=False, weights='imagenet')
+    model = k.applications.VGG19(include_top=False, weights='imagenet')
 
     # Training data bottleneck features
     generator = datagen.flow_from_directory(training_dir,
@@ -107,7 +107,7 @@ def train_top_model(size, training_dir, validation_dir, train_mapping, validatio
 
 def reconstruct_VGG(top_model_path, size, train_data_shape, ts, name):
     # build the VGG16 network
-    model = k.applications.VGG16(weights='imagenet', include_top=False, input_shape=(size,size,3))
+    model = k.applications.VGG19(weights='imagenet', include_top=False, input_shape=(size,size,3))
     print('VGG loaded.')
 
     top_model = make_top_model(shape=model.output_shape[1:])
@@ -116,12 +116,12 @@ def reconstruct_VGG(top_model_path, size, train_data_shape, ts, name):
     full_model = Model(inputs=model.input, outputs=top_model(model.output))
 
     # Set the first 15 layers to non-trainable
-    for layer in full_model.layers[:15]:
-        layer.trainable=False
+    #for layer in full_model.layers[:15]:
+    #    layer.trainable=False
 
     # Compile the model with a SGD/momentum optimizer
     # and a very slow learning rate
-    optimizer = k.optimizers.SGD(lr=1e-4, momentum=0.9)
+    optimizer = k.optimizers.SGD(lr=1e-5, momentum=0.9)
     full_model.compile(loss='binary_crossentropy',
                       optimizer=optimizer,
                       metrics=['accuracy'])
@@ -183,8 +183,9 @@ def save_planet(logger, name, epochs, size, batch_size,
 
     # Finetune the model
     callbacks = [EarlyStopping(monitor='val_loss', patience=4, verbose=1),
-        ModelCheckpoint('../models/VGG_{}_{}.h5'.format(logger.ts, name),
-         monitor='val_loss', save_best_only=True, verbose=1)]
+        ModelCheckpoint('../models/VGG{}_{}.h5'.format(logger.ts, name),
+         monitor='val_loss', save_best_only=True, verbose=1),
+         ReduceLROnPlateau(monitor='val_loss',factor=0.1,patience=2,cooldown=2,verbose=1)]
 
     model.fit_generator(generator=training_generator, steps_per_epoch=n_train_files/batch_size,
                      epochs=epochs, callbacks=callbacks, validation_data=(validation_generator),

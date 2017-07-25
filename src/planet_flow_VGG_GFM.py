@@ -62,7 +62,7 @@ def save_bottlebeck_features(size, datagen,
     batch_size=32
 
     # build the VGG16 network
-    model = k.applications.VGG16(include_top=False, weights='imagenet')
+    model = k.applications.VGG19(include_top=False, weights='imagenet')
 
     # Training data bottleneck features
     generator = datagen.flow_from_directory(training_dir,
