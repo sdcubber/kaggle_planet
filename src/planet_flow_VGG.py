@@ -18,7 +18,7 @@ from keras.models import Model, Sequential
 from keras.layers import Conv2D, MaxPooling2D, Input
 from keras.layers import Activation, Dropout, Flatten, Dense
 from keras.optimizers import Adam, SGD
-from keras.callbacks import EarlyStopping, ModelCheckpoint, LearningRateScheduler
+from keras.callbacks import EarlyStopping, ModelCheckpoint, LearningRateScheduler, ReduceLROnPlateau
 from sklearn.metrics import fbeta_score
 from sklearn.model_selection import train_test_split
 
@@ -121,7 +121,7 @@ def reconstruct_VGG(top_model_path, size, train_data_shape, ts, name):
 
     # Compile the model with a SGD/momentum optimizer
     # and a very slow learning rate
-    optimizer = k.optimizers.SGD(lr=1e-5, momentum=0.9)
+    optimizer = k.optimizers.Adam(lr=1e-5)
     full_model.compile(loss='binary_crossentropy',
                       optimizer=optimizer,
                       metrics=['accuracy'])
