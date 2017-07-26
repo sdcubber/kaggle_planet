@@ -183,7 +183,7 @@ def save_planet(logger, name, epochs, size, batch_size,
 
     # Finetune the model
     callbacks = [EarlyStopping(monitor='val_loss', patience=4, verbose=1),
-        ModelCheckpoint('../models/VGG{}_{}.h5'.format(logger.ts, name),
+        ModelCheckpoint('../models/VGG_{}_{}.h5'.format(logger.ts, name),
          monitor='val_loss', save_best_only=True, verbose=1),
          ReduceLROnPlateau(monitor='val_loss',factor=0.1,patience=2,cooldown=2,verbose=1)]
 
