@@ -550,8 +550,11 @@ class GFM_top_classifier(object):
         max_pooled_input = GlobalMaxPooling2D()(network_input)
         # Some shared layers
         shared_dense_1 = Dense(nodes, activation='relu')(max_pooled_input)
+        shared_dense_1 = Dropout(0.5)(shared_dense_1)
         shared_dense_2 = Dense(nodes, activation='relu')(shared_dense_1)
+        shared_dense_2 = Dropout(0.5)(shared_dense_2)
         shared_dense_3 = Dense(nodes, activation='relu')(shared_dense_2)
+        shared_dense_3 = Dropout(0.5)(shared_dense_3)
 
         # Stack 17 multiclass classification problems on top
         multiclass_0 = Dense(field_sizes[0], activation='softmax')(shared_dense_3)
