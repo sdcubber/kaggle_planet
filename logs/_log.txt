@@ -1,3 +1,136 @@
 ***********************************************
 ************* JOB REGISTER ********************
 ***********************************************
+
+
+STARTED test_19072017_18:44
+	arguments: Namespace(TTA=10, batch_size=20, debug=False, epochs=20, finetune=1, load_weights=False, name='test', nodes=128, size=48, treshold=0.85)
+
+STARTED test_19072017_18:48
+	arguments: Namespace(TTA=10, batch_size=20, debug=False, epochs=20, finetune=1, load_weights=False, name='test', nodes=128, size=48, treshold=0.85)
+
+STARTED GFM_128_VGG_full_19072017_21:48
+	arguments: Namespace(TTA=1, batch_size=32, debug=False, epochs=2, finetune=3, load_weights=False, name='GFM_128_VGG_full', nodes=5, size=128, treshold=0.85)
+
+STARTED GFM_128_VGG_full_19072017_22:08
+	arguments: Namespace(TTA=1, batch_size=32, debug=False, epochs=2, finetune=3, load_weights=False, name='GFM_128_VGG_full', nodes=5, size=128, treshold=0.85)
+
+STARTED GFM_128_VGG_full_19072017_22:34
+	arguments: Namespace(TTA=1, batch_size=32, debug=False, epochs=2, finetune=3, load_weights=False, name='GFM_128_VGG_full', nodes=5, size=128, treshold=0.85)
+
+STARTED GFM_128_VGG_full_19072017_22:35
+	arguments: Namespace(TTA=1, batch_size=32, debug=False, epochs=2, finetune=3, load_weights=False, name='GFM_128_VGG_full', nodes=5, size=48, treshold=0.85)
+
+STARTED GFM_224_VGG_full_19072017_22:44
+	arguments: Namespace(TTA=1, batch_size=32, debug=False, epochs=2, finetune=3, load_weights=False, name='GFM_224_VGG_full', nodes=5, size=48, treshold=0.85)
+
+STARTED GFM_128_VGG_full_19072017_22:48
+	arguments: Namespace(TTA=10, batch_size=32, debug=False, epochs=100, finetune=3, load_weights=False, name='GFM_128_VGG_full', nodes=128, size=128, treshold=0.85)
+
+STARTED GFM_224_VGG_full_20072017_01:43
+	arguments: Namespace(TTA=10, batch_size=32, debug=False, epochs=100, finetune=3, load_weights=False, name='GFM_224_VGG_full', nodes=128, size=224, treshold=0.85)
+
+STARTED GFM_128_VGG_full_21072017_11:01
+	arguments: Namespace(TTA=10, batch_size=32, debug=False, epochs=100, finetune=1, load_weights=False, name='GFM_128_VGG_full', nodes=128, size=128, treshold=0.85)
+
+STARTED test_22072017_13:31
+	arguments: Namespace(TTA=1, batch_size=32, debug=False, epochs=10, finetune=1, load_weights=False, name='test', nodes=5, size=48, treshold=0.85)
+
+STARTED test_22072017_15:53
+	arguments: Namespace(TTA=2, batch_size=32, debug=False, epochs=10, finetune=1, load_weights=False, name='test', nodes=128, size=48, treshold=0.85)
+
+STARTED test_22072017_15:53
+	arguments: Namespace(TTA=2, batch_size=32, debug=False, epochs=10, finetune=1, load_weights=False, name='test', nodes=128, size=48, treshold=0.85)
+
+STARTED test_22072017_17:55
+	arguments: Namespace(TTA=1, batch_size=32, debug=False, epochs=10, finetune=1, load_weights=False, name='test', nodes=5, size=48, treshold=0.0)
+
+STARTED test_22072017_18:23
+	arguments: Namespace(TTA=1, batch_size=32, debug=False, epochs=1, finetune=1, load_weights=False, name='test', nodes=5, size=48, treshold=0.0)
+
+STARTED GFM_128_VGG_full_22072017_18:32
+	arguments: Namespace(TTA=10, batch_size=32, debug=False, epochs=100, finetune=1, load_weights=False, name='GFM_128_VGG_full', nodes=128, size=128, treshold=0.85)
+
+STARTED GFM_48_VGG_test_22072017_21:27
+	arguments: Namespace(TTA=10, batch_size=32, debug=False, epochs=10, finetune=1, load_weights=False, name='GFM_48_VGG_test', nodes=5, size=48, treshold=0.85)
+
+STARTED GFM_48_VGG_test_22072017_21:34
+	arguments: Namespace(TTA=10, batch_size=32, debug=False, epochs=10, finetune=1, load_weights=False, name='GFM_48_VGG_test', nodes=5, size=48, treshold=0.85)
+
+STARTED GFM_128_VGG_full_22072017_21:51
+	arguments: Namespace(TTA=10, batch_size=32, debug=False, epochs=100, finetune=3, load_weights=False, name='GFM_128_VGG_full', nodes=128, size=128, treshold=0.85)
+
+STARTED GFM_128_VGG_full_22072017_22:19
+	arguments: Namespace(TTA=10, batch_size=32, debug=False, epochs=100, finetune=2, load_weights=False, name='GFM_128_VGG_full', nodes=128, size=128, treshold=0.85)
+
+STARTED GFM_128_VGG_full_22072017_22:37
+	arguments: Namespace(TTA=10, batch_size=32, debug=False, epochs=100, finetune=1, load_weights=False, name='GFM_128_VGG_full', nodes=128, size=128, treshold=0.85)
+
+STARTED GFM_128_VGG_full_22072017_22:52
+	arguments: Namespace(TTA=10, batch_size=32, debug=False, epochs=100, finetune=2, load_weights=False, name='GFM_128_VGG_full', nodes=128, size=128, treshold=0.85)
+
+STARTED GFM_128_VGG_full_22072017_23:15
+	arguments: Namespace(TTA=10, batch_size=32, debug=False, epochs=100, finetune=2, load_weights=False, name='GFM_128_VGG_full', nodes=128, optimizer='sgd', size=128, treshold=0.85)
+
+STARTED GFM_128_VGG_full_22072017_23:16
+	arguments: Namespace(TTA=10, batch_size=32, debug=False, epochs=100, finetune=2, load_weights=False, name='GFM_128_VGG_full', nodes=128, optimizer='adam', size=128, treshold=0.85)
+
+STARTED GFM_128_VGG_2_sgd_22072017_23:19
+	arguments: Namespace(TTA=10, batch_size=32, debug=False, epochs=100, finetune=2, load_weights=False, name='GFM_128_VGG_2_sgd', nodes=128, optimizer='sgd', size=128, treshold=0.85)
+
+STARTED GFM_128_VGG_2_adam_22072017_23:29
+	arguments: Namespace(TTA=10, batch_size=32, debug=False, epochs=100, finetune=2, load_weights=False, name='GFM_128_VGG_2_adam', nodes=128, optimizer='adam', size=128, treshold=0.85)
+
+STARTED GFM_128_VGG_2_sgd_22072017_23:40
+	arguments: Namespace(TTA=10, batch_size=32, debug=False, epochs=100, finetune=2, load_weights=False, name='GFM_128_VGG_2_sgd', nodes=128, optimizer='sgd', size=128, treshold=0.85)
+
+STARTED GFM_128_VGG_2_adam_23072017_02:32
+	arguments: Namespace(TTA=10, batch_size=32, debug=False, epochs=100, finetune=2, load_weights=False, name='GFM_128_VGG_2_adam', nodes=128, optimizer='adam', size=128, treshold=0.85)
+
+STARTED GFM_128_VGG_full_adam_23072017_04:28
+	arguments: Namespace(TTA=10, batch_size=32, debug=False, epochs=100, finetune=3, load_weights=False, name='GFM_128_VGG_full_adam', nodes=128, optimizer='adam', size=128, treshold=0.85)
+
+STARTED GFM_224_VGG_2_sgd_23072017_07:00
+	arguments: Namespace(TTA=10, batch_size=32, debug=False, epochs=100, finetune=2, load_weights=False, name='GFM_224_VGG_2_sgd', nodes=128, optimizer='sgd', size=224, treshold=0.85)
+
+STARTED GFM_224_VGG_full_adam_23072017_14:32
+	arguments: Namespace(TTA=10, batch_size=32, debug=False, epochs=100, finetune=2, load_weights=False, name='GFM_224_VGG_full_adam', nodes=128, optimizer='adam', size=224, treshold=0.85)
+
+STARTED GFM_224_VGG_full_adam_23072017_14:47
+	arguments: Namespace(TTA=10, batch_size=32, debug=False, epochs=100, finetune=2, load_weights=False, name='GFM_224_VGG_full_adam', nodes=128, optimizer='adam', size=224, treshold=0.85)
+
+STARTED GFM_128_VGG19_full_adam_25072017_19:58
+	arguments: Namespace(TTA=10, batch_size=32, debug=False, epochs=100, finetune=2, load_weights=False, name='GFM_128_VGG19_full_adam', nodes=128, optimizer='adam', size=128, treshold=0.85)
+
+STARTED 128_VGG19_full_adam_25072017_20:00
+	arguments: Namespace(TTA=10, batch_size=32, epochs=100, iterations=15, name='128_VGG19_full_adam', size=128, treshold=0.85)
+
+STARTED GFM_128_VGG19_full_adam_25072017_20:03
+	arguments: Namespace(TTA=10, batch_size=32, debug=False, epochs=100, finetune=2, load_weights=False, name='GFM_128_VGG19_full_adam', nodes=128, optimizer='adam', size=128, treshold=0.85)
+
+STARTED GFM_128_VGG19_full_adam_26072017_08:22
+	arguments: Namespace(TTA=10, batch_size=32, debug=False, epochs=100, finetune=2, load_weights=False, name='GFM_128_VGG19_full_adam', nodes=128, optimizer='adam', size=128, treshold=0.85)
+
+STARTED 128_VGG19_full_adam_26072017_11:12
+	arguments: Namespace(TTA=10, batch_size=32, epochs=100, iterations=15, name='128_VGG19_full_adam', size=128, treshold=0.85)
+
+STARTED 128_VGG19_full_adam_26072017_12:09
+	arguments: Namespace(TTA=10, batch_size=32, epochs=100, iterations=15, name='128_VGG19_full_adam', size=128, treshold=0.85)
+
+STARTED 128_VGG19_full_adam_26072017_14:58
+	arguments: Namespace(TTA=10, batch_size=32, epochs=100, iterations=15, name='128_VGG19_full_adam', size=128, treshold=0.85)
+
+STARTED 128_VGG19_full_adam_27072017_08:41
+	arguments: Namespace(TTA=10, batch_size=32, epochs=100, iterations=15, name='128_VGG19_full_adam', size=128, treshold=0.85)
+
+STARTED GFM_128_VGG19_full_adam_nod32_27072017_10:59
+	arguments: Namespace(TTA=10, batch_size=32, debug=False, epochs=100, finetune=1, load_weights=False, name='GFM_128_VGG19_full_adam_nod32', nodes=32, optimizer='adam', size=128, treshold=0.85)
+
+STARTED GFM_128_VGG19_full_adam_nod32_27072017_13:57
+	arguments: Namespace(TTA=10, batch_size=32, debug=False, epochs=100, finetune=1, load_weights=False, name='GFM_128_VGG19_full_adam_nod32', nodes=128, optimizer='adam', size=128, treshold=0.85)
+
+STARTED GFM_128_VGG19_full_adam_nod128_27072017_16:56
+	arguments: Namespace(TTA=10, batch_size=32, debug=False, epochs=100, finetune=1, load_weights=False, name='GFM_128_VGG19_full_adam_nod128', nodes=128, optimizer='adam', size=128, treshold=0.85)
+
+STARTED GFM_128_VGG19_full_adam_nod64_27072017_19:00
+	arguments: Namespace(TTA=10, batch_size=32, debug=False, epochs=100, finetune=1, load_weights=False, name='GFM_128_VGG19_full_adam_nod64', nodes=64, optimizer='adam', size=128, treshold=0.85)
