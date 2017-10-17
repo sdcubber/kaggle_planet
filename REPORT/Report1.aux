@@ -1,0 +1,47 @@
+\relax 
+\providecommand\hyper@newdestlabel[2]{}
+\providecommand\HyperFirstAtBeginDocument{\AtBeginDocument}
+\HyperFirstAtBeginDocument{\ifx\hyper@anchor\@undefined
+\global\let\oldcontentsline\contentsline
+\gdef\contentsline#1#2#3#4{\oldcontentsline{#1}{#2}{#3}}
+\global\let\oldnewlabel\newlabel
+\gdef\newlabel#1#2{\newlabelxx{#1}#2}
+\gdef\newlabelxx#1#2#3#4#5#6{\oldnewlabel{#1}{{#2}{#3}}}
+\AtEndDocument{\ifx\hyper@anchor\@undefined
+\let\contentsline\oldcontentsline
+\let\newlabel\oldnewlabel
+\fi}
+\fi}
+\global\let\hyper@last\relax 
+\gdef\HyperFirstAtBeginDocument#1{#1}
+\providecommand\HyField@AuxAddToFields[1]{}
+\providecommand\HyField@AuxAddToCoFields[2]{}
+\@writefile{toc}{\contentsline {section}{\numberline {1}Data and goal of the competition}{1}{section.1}}
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces Label distribution. There is a clear imbalance in frequence of the different labels.\relax }}{2}{figure.caption.1}}
+\providecommand*\caption@xref[2]{\@setref\relax\@undefined{#1}}
+\newlabel{labels}{{1}{2}{Label distribution. There is a clear imbalance in frequence of the different labels.\relax }{figure.caption.1}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Label co-occurence matrix. Some labels frequently occur together with other labels, while others are mutually exclusive. \relax }}{2}{figure.caption.2}}
+\newlabel{cooc}{{2}{2}{Label co-occurence matrix. Some labels frequently occur together with other labels, while others are mutually exclusive. \relax }{figure.caption.2}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Some example images from the training data set.\relax }}{3}{figure.caption.3}}
+\newlabel{images}{{3}{3}{Some example images from the training data set.\relax }{figure.caption.3}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {2}Evaluation metric}{3}{section.2}}
+\newlabel{Fscore}{{1}{3}{Evaluation metric}{equation.2.1}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {3}Data processing and models}{4}{section.3}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Left: U-Net architecture. Right: CNN architecture used for this competition.\relax }}{5}{figure.caption.7}}
+\newlabel{UNet}{{4}{5}{Left: U-Net architecture. Right: CNN architecture used for this competition.\relax }{figure.caption.7}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces Starting values for the thresholds were sampled from a Beta(5,2) distribution to reinitialize the hill-climbing algorithm several times to find the optimal thresholds.\relax }}{7}{figure.caption.14}}
+\newlabel{beta}{{5}{7}{Starting values for the thresholds were sampled from a Beta(5,2) distribution to reinitialize the hill-climbing algorithm several times to find the optimal thresholds.\relax }{figure.caption.14}{}}
+\newlabel{GFM}{{2}{8}{B. General F-measure Maximizer (GFM)}{equation.3.2}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {4}Results}{9}{section.4}}
+\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces Two different CNN output configurations. Top: standard architecture for multiclass labeling. The output layer consists of 17 neurons with a sigmoid output. The model is trained by minimizing a single binary cross-entropy loss over the 17 output nodes. Bottom: the estimate the probabilities required for the GFM algorithm, 17 output fields consisting of 10 nodes each are required. The model is trained by jointly minimizing 17 categorical cross-entropy loss functions, treating each output field as as multi-class classification problem.\relax }}{10}{figure.caption.16}}
+\newlabel{GFMarchi}{{6}{10}{Two different CNN output configurations. Top: standard architecture for multiclass labeling. The output layer consists of 17 neurons with a sigmoid output. The model is trained by minimizing a single binary cross-entropy loss over the 17 output nodes. Bottom: the estimate the probabilities required for the GFM algorithm, 17 output fields consisting of 10 nodes each are required. The model is trained by jointly minimizing 17 categorical cross-entropy loss functions, treating each output field as as multi-class classification problem.\relax }{figure.caption.16}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces Example outputs of the CNN architecture designed to estimate the matrix $P$. Left: estimated $P$ for correct predictions. Right: estimated $P$ for incorrect predictions. There is clearly more uncertainty for the incorrect predictions. Note that only the first 9 columns of these matrices are actually estimated, the other entries are all zero by default.\relax }}{11}{figure.caption.17}}
+\newlabel{GFMoutput}{{7}{11}{Example outputs of the CNN architecture designed to estimate the matrix $P$. Left: estimated $P$ for correct predictions. Right: estimated $P$ for incorrect predictions. There is clearly more uncertainty for the incorrect predictions. Note that only the first 9 columns of these matrices are actually estimated, the other entries are all zero by default.\relax }{figure.caption.17}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Performance of individual, non-ensembled models\relax }}{11}{table.caption.18}}
+\newlabel{resultstable}{{1}{11}{Performance of individual, non-ensembled models\relax }{table.caption.18}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {5}Ensembling and final submission}{11}{section.5}}
+\@writefile{lof}{\contentsline {figure}{\numberline {8}{\ignorespaces Correlation matrix for submission files with a public LB score larger than 0.927.\relax }}{12}{figure.caption.19}}
+\newlabel{correlations}{{8}{12}{Correlation matrix for submission files with a public LB score larger than 0.927.\relax }{figure.caption.19}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {6}Conclusions and potential improvements}{13}{section.6}}
+\@writefile{lof}{\contentsline {figure}{\numberline {9}{\ignorespaces Overview of the General F-measure Maximizer algorithm. The input matrix $\Delta $ is equivalent with the matrix $P$ estimated by the proposed CNN architectures in this report. The algorithm is repeated for each instance and $\mathbf  {h_F}$ is the Bayes-optimal prediction vector for a particular instance.\relax }}{14}{figure.caption.21}}
+\newlabel{GFMalgo}{{9}{14}{Overview of the General F-measure Maximizer algorithm. The input matrix $\Delta $ is equivalent with the matrix $P$ estimated by the proposed CNN architectures in this report. The algorithm is repeated for each instance and $\mathbf {h_F}$ is the Bayes-optimal prediction vector for a particular instance.\relax }{figure.caption.21}{}}
